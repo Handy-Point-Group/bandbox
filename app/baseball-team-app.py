@@ -3,6 +3,7 @@
 import pandas as pd
 import streamlit as st
 import sys, shutil, pathlib
+from utils import get_auth_manager, require_auth
 
 # cache resets
 for p in pathlib.Path(".").rglob("__pycache__"):
@@ -15,33 +16,55 @@ team_leaderboards = st.Page("pages/team-leaderboards.py",title="Leaderboards",ic
 player_page = st.Page("pages/player-page.py",title="Player Summary",icon=":material/bar_chart:")
 plate_discipline_tracking = st.Page("pages/plate-discipline-tracking.py",title="Plate Discipline Tracking",icon=":material/background_dot_small:")
 data_input = st.Page("pages/data-input.py",title="Data Upload",icon=":material/upload:")
-
-#%% Authentication
-
-def authenticate():
-    st.sidebar.header('Login')
-    entered_password = st.sidebar.text_input("Password", type='password')
-    
-    # Access the password from secrets
-    correct_password = st.secrets["authentication"]["password"]
-
-    if entered_password == correct_password:
-        return True
-    elif entered_password:
-        st.sidebar.error("Incorrect password")
-    return False
+admin_user_management = st.Page("pages/admin-user-management.py",title="User Management",icon=":material/admin_panel_settings:")
 
 #%% Run the App
 st.set_page_config(layout="wide")
 
 st.logo(r'app/images/lighthouse 1.png', size='large')
 
-if authenticate():
-    nav = st.navigation([
-        roster,
-        team_leaderboards,
-        player_page,
-        data_input,
-        plate_discipline_tracking
-        ])
-    nav.run()
+# Initialize authentication
+auth = get_auth_manager()
+
+# Check if user is authenticated
+if not auth.check_authentication():
+    st.warning("⚠️ You must be logged in to access this application.")
+    st.info("Please log in or create an account to continue.")
+    
+    col1, col2, col3 = st.columns([1, 1, 1])
+    
+    with col1:
+        if st.button("🔐 Login", use_container_width=True, type="primary"):
+            st.switch_page("pages/login.py")
+    
+    with col2:
+        if st.button("📝 Sign Up", use_container_width=True):
+            st.switch_page("pages/signup.py")
+    
+    with col3:
+        if st.button("🔐 Google Login", use_container_width=True):
+            try:
+                st.login()
+            except:
+                st.switch_page("pages/login.py")
+    
+    st.stop()
+
+# Display user info in sidebar
+auth.display_user_info()
+
+# Build navigation based on user role
+pages = [
+    roster,
+    team_leaderboards,
+    player_page,
+    data_input,
+    plate_discipline_tracking
+]
+
+# Add admin page for team_admin and above
+if auth.has_role('team_admin'):
+    pages.append(admin_user_management)
+
+nav = st.navigation(pages)
+nav.run()
