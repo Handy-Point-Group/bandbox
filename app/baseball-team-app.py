@@ -31,7 +31,7 @@ if not auth.check_authentication():
     st.warning("⚠️ You must be logged in to access this application.")
     st.info("Please log in or create an account to continue.")
     
-    col1, col2, col3 = st.columns([1, 1, 1])
+    col1, col2 = st.columns([1, 1])
     
     with col1:
         if st.button("🔐 Login", use_container_width=True, type="primary"):
@@ -40,13 +40,6 @@ if not auth.check_authentication():
     with col2:
         if st.button("📝 Sign Up", use_container_width=True):
             st.switch_page("pages/signup.py")
-    
-    with col3:
-        if st.button("🔐 Google Login", use_container_width=True):
-            try:
-                st.login()
-            except:
-                st.switch_page("pages/login.py")
     
     st.stop()
 

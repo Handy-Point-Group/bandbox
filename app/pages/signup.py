@@ -179,18 +179,9 @@ with st.form("signup_form"):
 
 st.markdown("---")
 
-col1, col2 = st.columns(2)
-
-with col1:
-    st.markdown("Already have an account?")
-    if st.button("Login Here", use_container_width=True):
-        st.switch_page("pages/login.py")
-
-with col2:
-    st.markdown("Or sign in with:")
-    if st.button("🔐 Google Account", use_container_width=True):
-        # This will redirect to Google OAuth
-        st.login()
+st.markdown("Already have an account?")
+if st.button("Login Here", use_container_width=True):
+    st.switch_page("pages/login.py")
 
 st.markdown("---")
 st.caption("🔒 Your information is secure and encrypted")
