@@ -92,8 +92,8 @@ class PasswordAuth:
                 return None
             
             # Check organization
-            if user.get('organization_id'):
-                org = self.supabase.get_organization(user['organization_id'])
+            if user.get('primary_organization_id'):
+                org = self.supabase.get_organization(user['primary_organization_id'])
                 if org and not org.get('is_active', False):
                     logger.warning(f"Organization inactive for user: {email}")
                     return None
@@ -144,7 +144,7 @@ class PasswordAuth:
                 "email": email,
                 "password_hash": password_hash,
                 "full_name": full_name,
-                "organization_id": organization_id,
+                "primary_organization_id": organization_id,
                 "role": role,
                 "is_active": True
             }

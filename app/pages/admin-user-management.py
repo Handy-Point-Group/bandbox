@@ -59,9 +59,9 @@ with tab1:
         user_df = pd.DataFrame(users)
         
         # Add organization names
-        if 'organization_id' in user_df.columns:
+        if 'primary_organization_id' in user_df.columns:
             org_map = {org['id']: org['name'] for org in organizations}
-            user_df['organization'] = user_df['organization_id'].map(org_map)
+            user_df['organization'] = user_df['primary_organization_id'].map(org_map)
         
         # Format dates
         if 'created_at' in user_df.columns:
