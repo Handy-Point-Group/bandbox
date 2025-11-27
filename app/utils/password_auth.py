@@ -150,7 +150,7 @@ class PasswordAuth:
             }
             
             # Insert user
-            response = self.supabase.client.table("users").insert(user_data).execute()
+            response = self.supabase.client.from_("users").insert(user_data).execute()
             
             if response.data and len(response.data) > 0:
                 logger.info(f"User created with password: {email}")
@@ -176,7 +176,7 @@ class PasswordAuth:
         try:
             password_hash = self.hash_password(new_password)
             
-            response = self.supabase.client.table("users").update(
+            response = self.supabase.client.from_("users").update(
                 {"password_hash": password_hash}
             ).eq("id", user_id).execute()
             

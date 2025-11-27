@@ -137,12 +137,12 @@ with st.form("signup_form"):
                         # Create new organization
                         new_org_data = {
                             'name': new_org_name.strip(),
-                            'location': new_org_location.strip() if new_org_location else None,
+                            'city': new_org_location.strip() if new_org_location else None,
                             'is_active': True
                         }
                         
                         try:
-                            result = supabase.client.table('organizations').insert(new_org_data).execute()
+                            result = supabase.client.from_('organizations').insert(new_org_data).execute()
                             org_id = result.data[0]['id']
                             st.info(f"✨ Created new organization: {new_org_name}")
                         except Exception as e:

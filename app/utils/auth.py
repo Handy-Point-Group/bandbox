@@ -92,7 +92,7 @@ class AuthManager:
             
             # Update Google ID if not set
             if not user.get('google_id') and google_id:
-                self.supabase.client.table("users").update(
+                self.supabase.client.from_("users").update(
                     {"google_id": google_id}
                 ).eq("id", user['id']).execute()
                 user['google_id'] = google_id

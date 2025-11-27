@@ -22,6 +22,10 @@ class SupabaseClient:
         try:
             self.conn = st.connection("supabase", type=SupabaseConnection)
             self.client = self.conn.client
+            # Set default schema to core_db
+            self.client.schema = "core_db"
+            # Set the schema in request headers
+            self.client.postgrest.schema = "core_db"
         except Exception as e:
             logger.error(f"Failed to initialize Supabase client: {e}")
             raise
@@ -39,7 +43,7 @@ class SupabaseClient:
             User data dictionary or None if not found
         """
         try:
-            response = self.client.table("users").select("*").eq("email", email).execute()
+            response = self.client.from_("users").select("*").eq("email", email).execute()
             if response.data and len(response.data) > 0:
                 return response.data[0]
             return None
@@ -58,7 +62,7 @@ class SupabaseClient:
             User data dictionary or None if not found
         """
         try:
-            response = self.client.table("users").select("*").eq("google_id", google_id).execute()
+            response = self.client.from_("users").select("*").eq("google_id", google_id).execute()
             if response.data and len(response.data) > 0:
                 return response.data[0]
             return None
@@ -97,7 +101,7 @@ class SupabaseClient:
                 "is_active": True
             }
             
-            response = self.client.table("users").insert(user_data).execute()
+            response = self.client.from_("users").insert(user_data).execute()
             if response.data and len(response.data) > 0:
                 logger.info(f"Created new user: {email}")
                 return response.data[0]
@@ -117,7 +121,7 @@ class SupabaseClient:
             True if successful, False otherwise
         """
         try:
-            response = self.client.table("users").update(
+            response = self.client.from_("users").update(
                 {"last_login": datetime.utcnow().isoformat()}
             ).eq("id", user_id).execute()
             return bool(response.data)
@@ -137,7 +141,7 @@ class SupabaseClient:
             True if successful, False otherwise
         """
         try:
-            response = self.client.table("users").update(
+            response = self.client.from_("users").update(
                 {"role": role}
             ).eq("id", user_id).execute()
             return bool(response.data)
@@ -156,7 +160,7 @@ class SupabaseClient:
             True if successful, False otherwise
         """
         try:
-            response = self.client.table("users").update(
+            response = self.client.from_("users").update(
                 {"is_active": False}
             ).eq("id", user_id).execute()
             return bool(response.data)
@@ -175,7 +179,7 @@ class SupabaseClient:
             True if successful, False otherwise
         """
         try:
-            response = self.client.table("users").update(
+            response = self.client.from_("users").update(
                 {"is_active": True}
             ).eq("id", user_id).execute()
             return bool(response.data)
@@ -196,7 +200,7 @@ class SupabaseClient:
             Organization data dictionary or None if not found
         """
         try:
-            response = self.client.table("organizations").select("*").eq("id", organization_id).execute()
+            response = self.client.from_("organizations").select("*").eq("id", organization_id).execute()
             if response.data and len(response.data) > 0:
                 return response.data[0]
             return None
@@ -212,7 +216,7 @@ class SupabaseClient:
             List of organization data dictionaries
         """
         try:
-            response = self.client.table("organizations").select("*").execute()
+            response = self.client.from_("organizations").select("*").execute()
             return response.data if response.data else []
         except Exception as e:
             logger.error(f"Error fetching organizations: {e}")
@@ -236,7 +240,7 @@ class SupabaseClient:
                 "is_active": True
             }
             
-            response = self.client.table("organizations").insert(org_data).execute()
+            response = self.client.from_("organizations").insert(org_data).execute()
             if response.data and len(response.data) > 0:
                 logger.info(f"Created new organization: {name}")
                 return response.data[0]
@@ -258,7 +262,7 @@ class SupabaseClient:
             List of user data dictionaries
         """
         try:
-            response = self.client.table("users").select("*").eq("organization_id", organization_id).execute()
+            response = self.client.from_("users").select("*").eq("organization_id", organization_id).execute()
             return response.data if response.data else []
         except Exception as e:
             logger.error(f"Error fetching users by organization: {e}")
@@ -272,7 +276,7 @@ class SupabaseClient:
             List of user data dictionaries
         """
         try:
-            response = self.client.table("users").select("*").execute()
+            response = self.client.from_("users").select("*").execute()
             return response.data if response.data else []
         except Exception as e:
             logger.error(f"Error fetching all users: {e}")
