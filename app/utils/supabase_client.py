@@ -22,10 +22,7 @@ class SupabaseClient:
         try:
             self.conn = st.connection("supabase", type=SupabaseConnection)
             self.client = self.conn.client
-            # Set default schema to core_db
-            self.client.schema = "core_db"
-            # Set the schema in request headers
-            self.client.postgrest.schema = "core_db"
+            logger.info("Supabase client initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize Supabase client: {e}")
             raise
@@ -95,7 +92,7 @@ class SupabaseClient:
             user_data = {
                 "email": email,
                 "full_name": full_name,
-                "organization_id": organization_id,
+                "primary_organization_id": organization_id,
                 "google_id": google_id,
                 "role": role,
                 "is_active": True
@@ -262,7 +259,7 @@ class SupabaseClient:
             List of user data dictionaries
         """
         try:
-            response = self.client.from_("users").select("*").eq("organization_id", organization_id).execute()
+            response = self.client.from_("users").select("*").eq("primary_organization_id", organization_id).execute()
             return response.data if response.data else []
         except Exception as e:
             logger.error(f"Error fetching users by organization: {e}")

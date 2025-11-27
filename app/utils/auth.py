@@ -102,8 +102,8 @@ class AuthManager:
             
             # Load organization data
             org_data = None
-            if user.get('organization_id'):
-                org_data = self.supabase.get_organization(user['organization_id'])
+            if user.get('primary_organization_id'):
+                org_data = self.supabase.get_organization(user['primary_organization_id'])
                 
                 # Check if organization is active
                 if org_data and not org_data.get('is_active', False):
@@ -169,8 +169,8 @@ class AuthManager:
         
         # Load organization data
         org_data = None
-        if user.get('organization_id'):
-            org_data = self.supabase.get_organization(user['organization_id'])
+        if user.get('primary_organization_id'):
+            org_data = self.supabase.get_organization(user['primary_organization_id'])
         
         # Load permissions
         permissions = self.supabase.get_user_permissions(user['id'])

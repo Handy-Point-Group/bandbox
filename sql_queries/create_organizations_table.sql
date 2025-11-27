@@ -2,10 +2,7 @@
 -- Run this in your Supabase SQL Editor BEFORE creating the users table
 -- (users table references organizations)
 
--- Create schema if it doesn't exist
-CREATE SCHEMA IF NOT EXISTS core_db;
-
-CREATE TABLE core_db.organizations (
+CREATE TABLE IF NOT EXISTS public.organizations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     display_name TEXT,
@@ -54,9 +51,9 @@ CREATE TABLE core_db.organizations (
 );
 
 -- Create indexes for better query performance
-CREATE INDEX idx_organizations_name ON core_db.organizations(name);
-CREATE INDEX idx_organizations_org_type ON core_db.organizations(org_type);
-CREATE INDEX idx_organizations_is_active ON core_db.organizations(is_active);
+CREATE INDEX IF NOT EXISTS idx_organizations_name ON public.organizations(name);
+CREATE INDEX IF NOT EXISTS idx_organizations_org_type ON public.organizations(org_type);
+CREATE INDEX IF NOT EXISTS idx_organizations_is_active ON public.organizations(is_active);
 
 -- Create a trigger to automatically update the updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -67,18 +64,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_organizations_updated_at ON public.organizations;
 CREATE TRIGGER update_organizations_updated_at
-    BEFORE UPDATE ON core_db.organizations
+    BEFORE UPDATE ON public.organizations
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
 -- Add helpful comments
-COMMENT ON TABLE core_db.organizations IS 'Stores organization information such as teams, leagues, clubs, or schools';
-COMMENT ON COLUMN core_db.organizations.name IS 'Organization name (required, used for internal reference)';
-COMMENT ON COLUMN core_db.organizations.display_name IS 'Display name for the organization (can be different from name)';
-COMMENT ON COLUMN core_db.organizations.org_type IS 'Type of organization: team, league, club, school, or other';
-COMMENT ON COLUMN core_db.organizations.max_teams IS 'Maximum number of teams allowed in this organization';
-COMMENT ON COLUMN core_db.organizations.max_members IS 'Maximum number of members allowed in this organization';
-COMMENT ON COLUMN core_db.organizations.logo_url IS 'URL to the organization logo image';
-COMMENT ON COLUMN core_db.organizations.metadata IS 'Additional flexible data stored as JSON';
+COMMENT ON TABLE public.organizations IS 'Stores organization information such as teams, leagues, clubs, or schools';
+COMMENT ON COLUMN public.organizations.name IS 'Organization name (required, used for internal reference)';
+COMMENT ON COLUMN public.organizations.display_name IS 'Display name for the organization (can be different from name)';
+COMMENT ON COLUMN public.organizations.org_type IS 'Type of organization: team, league, club, school, or other';
+COMMENT ON COLUMN public.organizations.max_teams IS 'Maximum number of teams allowed in this organization';
+COMMENT ON COLUMN public.organizations.max_members IS 'Maximum number of members allowed in this organization';
+COMMENT ON COLUMN public.organizations.logo_url IS 'URL to the organization logo image';
+COMMENT ON COLUMN public.organizations.metadata IS 'Additional flexible data stored as JSON';
 
