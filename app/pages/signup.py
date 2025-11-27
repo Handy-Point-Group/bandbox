@@ -18,13 +18,9 @@ st.markdown("Join BandBox to track your baseball performance")
 password_auth = get_password_auth()
 supabase = get_supabase_client()
 
-# Get available organizations
+# Get available organizations (for joining existing ones)
 organizations = supabase.get_all_organizations()
 active_orgs = [org for org in organizations if org.get('is_active', False)]
-
-if not active_orgs:
-    st.error("❌ No active organizations available. Please contact an administrator.")
-    st.stop()
 
 st.markdown("---")
 
@@ -47,13 +43,36 @@ with st.form("signup_form"):
     
     st.subheader("Organization")
     
-    # Organization selection
-    org_dict = {org['name']: org['id'] for org in active_orgs}
-    selected_org_name = st.selectbox(
-        "Select Your Team/Organization *",
-        options=list(org_dict.keys()),
-        help="Choose the organization you belong to"
+    # Organization selection or creation
+    org_option = st.radio(
+        "How would you like to join?",
+        options=["Join existing organization", "Create new organization"],
+        help="Choose whether to join an existing team or create your own"
     )
+    
+    if org_option == "Join existing organization":
+        if not active_orgs:
+            st.warning("⚠️ No organizations available. Please create a new one.")
+            org_option = "Create new organization"  # Force creation
+        else:
+            org_dict = {org['name']: org['id'] for org in active_orgs}
+            selected_org_name = st.selectbox(
+                "Select Your Team/Organization *",
+                options=list(org_dict.keys()),
+                help="Choose the organization you belong to"
+            )
+    
+    if org_option == "Create new organization":
+        new_org_name = st.text_input(
+            "Organization Name *",
+            placeholder="e.g., Tigers Baseball Team",
+            help="Enter the name for your new team/organization"
+        )
+        new_org_location = st.text_input(
+            "Location (optional)",
+            placeholder="e.g., New York, NY",
+            help="Where is your organization based?"
+        )
     
     st.divider()
     
@@ -79,6 +98,12 @@ with st.form("signup_form"):
         
         if not full_name or not email or not password or not confirm_password:
             errors.append("❌ All fields are required")
+        
+        # Validate organization selection/creation
+        if org_option == "Join existing organization" and 'selected_org_name' not in locals():
+            errors.append("❌ Please select an organization")
+        elif org_option == "Create new organization" and (not new_org_name or not new_org_name.strip()):
+            errors.append("❌ Organization name is required")
         
         if password != confirm_password:
             errors.append("❌ Passwords do not match")
@@ -107,20 +132,40 @@ with st.form("signup_form"):
                 if existing_user:
                     st.error("❌ An account with this email already exists. Please login instead.")
                 else:
-                    # Create the user
-                    org_id = org_dict[selected_org_name]
+                    # Determine organization ID
+                    if org_option == "Create new organization":
+                        # Create new organization
+                        new_org_data = {
+                            'name': new_org_name.strip(),
+                            'location': new_org_location.strip() if new_org_location else None,
+                            'is_active': True
+                        }
+                        
+                        try:
+                            result = supabase.client.table('organizations').insert(new_org_data).execute()
+                            org_id = result.data[0]['id']
+                            st.info(f"✨ Created new organization: {new_org_name}")
+                        except Exception as e:
+                            st.error(f"❌ Failed to create organization: {e}")
+                            st.stop()
+                    else:
+                        # Use selected organization
+                        org_id = org_dict[selected_org_name]
                     
+                    # Create the user
                     new_user = password_auth.create_user_with_password(
                         email=email,
                         password=password,
                         full_name=full_name,
                         organization_id=org_id,
-                        role='player'  # Default role for new signups
+                        role='team_admin' if org_option == "Create new organization" else 'player'  # Make creator an admin
                     )
                     
                     if new_user:
                         st.success("✅ Account created successfully!")
                         st.balloons()
+                        if org_option == "Create new organization":
+                            st.success(f"🎉 You are now the admin of {new_org_name}!")
                         st.info("🎉 You can now log in with your email and password")
                         
                         # Add a link to login

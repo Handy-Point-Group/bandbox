@@ -37,24 +37,29 @@ class AuthManager:
     
     def check_authentication(self) -> bool:
         """
-        Check if user is authenticated via Google OIDC and validated in Supabase
+        Check if user is authenticated via session state (password) or Google OIDC
         
         Returns:
             True if authenticated and validated, False otherwise
         """
-        # Check if user is logged in via Google OIDC
-        if not st.user.is_logged_in:
-            return False
-        
-        # If already authenticated in session, return True
+        # First check if already authenticated in session (password-based auth)
         if st.session_state.authenticated and st.session_state.user_data:
             return True
         
-        # Validate user against Supabase database
-        user_email = st.user.email
-        google_id = st.user.sub  # Google's unique user ID
+        # Try to check Google OIDC authentication
+        try:
+            # Check if user is logged in via Google OIDC
+            if hasattr(st, 'user') and hasattr(st.user, 'is_logged_in') and st.user.is_logged_in:
+                # Validate user against Supabase database
+                user_email = st.user.email
+                google_id = st.user.sub  # Google's unique user ID
+                return self._validate_user(user_email, google_id)
+        except (AttributeError, Exception) as e:
+            # st.user not configured or not available, that's ok
+            logger.debug(f"Google OIDC not available: {e}")
         
-        return self._validate_user(user_email, google_id)
+        # Not authenticated via any method
+        return False
     
     def _validate_user(self, email: str, google_id: str) -> bool:
         """
