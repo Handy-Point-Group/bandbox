@@ -166,12 +166,12 @@ with st.form("signup_form"):
                         st.balloons()
                         if org_option == "Create new organization":
                             st.success(f"🎉 You are now the admin of {new_org_name}!")
-                        st.info("🎉 You can now log in with your email and password")
+                        st.info("🎉 Redirecting to login page...")
                         
-                        # Add a link to login
-                        st.markdown("---")
-                        if st.button("Go to Login", use_container_width=True):
-                            st.switch_page("pages/login.py")
+                        # Auto-redirect to login page
+                        import time
+                        time.sleep(2)  # Give user time to see the success message
+                        st.switch_page("pages/login.py")
                     else:
                         st.error("❌ Failed to create account. Please try again or contact support.")
 
