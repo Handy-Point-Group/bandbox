@@ -233,13 +233,18 @@ class AuthManager:
         
         user_role = st.session_state.user_data.get('role', 'player')
         
-        # Role hierarchy: super_admin > organization_admin > team_admin > coach > player
+        # Role hierarchy: superadmin > admin-org > admin-team > admin > coach > player > user
         role_hierarchy = {
-            'super_admin': 5,
-            'organization_admin': 4,
-            'team_admin': 3,
-            'coach': 2,
-            'player': 1
+            'superadmin': 7,
+            'super_admin': 7,  # Alias for compatibility
+            'admin-org': 6,
+            'organization_admin': 6,  # Alias for compatibility
+            'admin-team': 5,
+            'team_admin': 5,  # Alias for compatibility
+            'admin': 4,
+            'coach': 3,
+            'player': 2,
+            'user': 1
         }
         
         user_level = role_hierarchy.get(user_role, 0)
@@ -275,13 +280,18 @@ class AuthManager:
         """
         if not self.has_role(required_role):
             role_names = {
+                'superadmin': 'Superadmin',
                 'super_admin': 'Super Admin',
+                'admin-org': 'Organization Admin',
                 'organization_admin': 'Organization Admin',
+                'admin-team': 'Team Admin',
                 'team_admin': 'Team Admin',
+                'admin': 'Admin',
                 'coach': 'Coach',
-                'player': 'Player'
+                'player': 'Player',
+                'user': 'User'
             }
-            display_name = role_names.get(required_role, required_role)
+            display_name = role_names.get(required_role, required_role.replace('_', ' ').replace('-', ' ').title())
             st.error(f"🚫 Access Denied: This page requires '{display_name}' role or higher.")
             st.stop()
     

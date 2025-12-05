@@ -221,7 +221,7 @@ class SupabaseClient:
     
     def create_organization(self, name: str, settings: Optional[Dict] = None) -> Optional[Dict[str, Any]]:
         """
-        Create a new organization
+        Create a new organization (simple version for backward compatibility)
         
         Args:
             name: Organization name
@@ -233,13 +233,38 @@ class SupabaseClient:
         try:
             org_data = {
                 "name": name,
-                "settings": settings or {},
+                "metadata": settings or {},
                 "is_active": True
             }
             
             response = self.client.from_("organizations").insert(org_data).execute()
             if response.data and len(response.data) > 0:
                 logger.info(f"Created new organization: {name}")
+                return response.data[0]
+            return None
+        except Exception as e:
+            logger.error(f"Error creating organization: {e}")
+            return None
+    
+    def create_organization_full(self, org_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """
+        Create a new organization with full field support
+        
+        Args:
+            org_data: Dictionary containing all organization fields
+                Required: name
+                Optional: display_name, description, org_type, email, phone, website,
+                         address_line1, address_line2, city, state, postal_code, country,
+                         is_active, max_teams, max_members, logo_url, primary_color, 
+                         secondary_color, metadata
+            
+        Returns:
+            Created organization data or None if failed
+        """
+        try:
+            response = self.client.from_("organizations").insert(org_data).execute()
+            if response.data and len(response.data) > 0:
+                logger.info(f"Created new organization: {org_data.get('name')}")
                 return response.data[0]
             return None
         except Exception as e:
