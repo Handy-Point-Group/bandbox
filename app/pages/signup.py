@@ -43,20 +43,62 @@ with st.form("signup_form"):
     
     st.subheader("Organization")
     
-    # Organization selection only (no creation)
-    if not active_orgs:
-        st.error("⚠️ No organizations available.")
-        st.info("Please contact a system administrator to create an organization first.")
-        st.stop()
-    else:
-        org_dict = {org['name']: org['id'] for org in active_orgs}
-        selected_org_name = st.selectbox(
-            "Select Your Team/Organization *",
-            options=list(org_dict.keys()),
-            help="Choose the organization you belong to"
-        )
+    # Check if user is pre-authorized
+    if email:  # Only check if email is entered
+        authorized_record = supabase.check_user_authorized_any_org(email)
         
-        st.info("💡 **Need a new organization?** Contact your superadmin to create one.")
+        if authorized_record:
+            # User is pre-authorized - show their organization
+            auth_org = supabase.get_organization(authorized_record['organization_id'])
+            
+            st.success(f"✅ You are pre-authorized to join **{auth_org['name']}**")
+            st.info(f"📋 Your assigned role will be: **{authorized_record['assigned_role']}**")
+            
+            if authorized_record.get('authorization_note'):
+                st.info(f"📝 Note: {authorized_record['authorization_note']}")
+            
+            # Store for later use
+            org_dict = {auth_org['name']: auth_org['id']}
+            selected_org_name = auth_org['name']
+            pre_authorized = True
+            assigned_role = authorized_record['assigned_role']
+            auth_record_id = authorized_record['id']
+        else:
+            # User not pre-authorized - allow selection from available orgs
+            pre_authorized = False
+            assigned_role = 'player'
+            auth_record_id = None
+            
+            if not active_orgs:
+                st.error("⚠️ No organizations available.")
+                st.info("Please contact a system administrator to authorize you for an organization.")
+                st.stop()
+            else:
+                org_dict = {org['name']: org['id'] for org in active_orgs}
+                selected_org_name = st.selectbox(
+                    "Select Your Team/Organization *",
+                    options=list(org_dict.keys()),
+                    help="Choose the organization you belong to"
+                )
+                
+                st.info("💡 **Pre-authorized users:** Enter your email above to see your assigned organization.")
+    else:
+        # Email not entered yet
+        pre_authorized = False
+        assigned_role = 'player'
+        auth_record_id = None
+        
+        if not active_orgs:
+            st.error("⚠️ No organizations available.")
+            st.info("Please contact a system administrator to authorize you for an organization.")
+            st.stop()
+        else:
+            org_dict = {org['name']: org['id'] for org in active_orgs}
+            selected_org_name = st.selectbox(
+                "Select Your Team/Organization *",
+                options=list(org_dict.keys()),
+                help="Choose the organization you belong to"
+            )
     
     st.divider()
     
@@ -117,17 +159,25 @@ with st.form("signup_form"):
                     # Use selected organization
                     org_id = org_dict[selected_org_name]
                     
-                    # Create the user with 'player' role by default
+                    # Create the user with assigned role (either from authorization or default 'player')
                     new_user = password_auth.create_user_with_password(
                         email=email,
                         password=password,
                         full_name=full_name,
                         organization_id=org_id,
-                        role='player'
+                        role=assigned_role
                     )
                     
                     if new_user:
+                        # If user was pre-authorized, mark them as signed up
+                        if pre_authorized and auth_record_id:
+                            supabase.mark_authorized_user_signed_up(email, org_id, new_user['id'])
+                        
                         st.success("✅ Account created successfully!")
+                        
+                        if assigned_role != 'player':
+                            st.success(f"🎉 You have been assigned the '{assigned_role}' role!")
+                        
                         st.balloons()
                         st.info("🎉 Redirecting to login page...")
                         

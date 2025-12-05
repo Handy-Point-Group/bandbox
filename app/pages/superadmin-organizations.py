@@ -192,6 +192,33 @@ with tab1:
                 help="Secondary brand color"
             )
         
+        # Organization Admin
+        st.markdown("### Organization Administrator (Optional)")
+        st.info("💡 You can pre-authorize an organization admin who will be able to sign up and manage this organization.")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            admin_email = st.text_input(
+                "Admin Email Address",
+                placeholder="admin@organization.com",
+                help="Email of the person who will be the organization administrator"
+            )
+        
+        with col2:
+            admin_name = st.text_input(
+                "Admin Full Name",
+                placeholder="John Doe",
+                help="Full name of the organization administrator"
+            )
+        
+        admin_note = st.text_area(
+            "Authorization Note",
+            placeholder="e.g., Head Coach, Team Manager, etc.",
+            help="Optional note about this administrator",
+            height=80
+        )
+        
         st.markdown("---")
         
         # Submit button
@@ -236,23 +263,44 @@ with tab1:
                 if any(org['name'].lower() == name.lower() for org in existing_orgs):
                     st.error(f"❌ Organization '{name}' already exists")
                 else:
-                    # Create organization
-                    try:
-                        created_org = supabase.create_organization_full(org_data)
+                # Create organization
+                try:
+                    created_org = supabase.create_organization_full(org_data)
+                    
+                    if created_org:
+                        st.success(f"✅ Organization '{name}' created successfully!")
                         
-                        if created_org:
-                            st.success(f"✅ Organization '{name}' created successfully!")
-                            st.balloons()
-                            
-                            # Display created organization details
-                            with st.expander("📋 View Created Organization Details"):
-                                st.json(created_org)
-                            
-                            st.info("💡 Tip: You can now assign users to this organization through the User Management page.")
-                        else:
-                            st.error("❌ Failed to create organization. Please check the logs.")
-                    except Exception as e:
-                        st.error(f"❌ Error creating organization: {str(e)}")
+                        # Add organization admin to authorized users if provided
+                        if admin_email and admin_email.strip():
+                            try:
+                                auth_user = supabase.add_authorized_user(
+                                    email=admin_email.strip(),
+                                    organization_id=created_org['id'],
+                                    assigned_role='admin-org',
+                                    authorized_by=current_user['id'],
+                                    full_name=admin_name.strip() if admin_name else None,
+                                    authorization_note=admin_note.strip() if admin_note else "Organization Administrator"
+                                )
+                                
+                                if auth_user:
+                                    st.success(f"✅ Organization admin '{admin_email}' has been authorized!")
+                                    st.info(f"📧 {admin_email} can now sign up and will be automatically assigned as organization admin.")
+                                else:
+                                    st.warning("⚠️ Organization created but failed to authorize admin user.")
+                            except Exception as admin_error:
+                                st.warning(f"⚠️ Organization created but error authorizing admin: {str(admin_error)}")
+                        
+                        st.balloons()
+                        
+                        # Display created organization details
+                        with st.expander("📋 View Created Organization Details"):
+                            st.json(created_org)
+                        
+                        st.info("💡 Tip: You can manage authorized users through the User Management page.")
+                    else:
+                        st.error("❌ Failed to create organization. Please check the logs.")
+                except Exception as e:
+                    st.error(f"❌ Error creating organization: {str(e)}")
 
 #%% Tab 2: View Organizations
 

@@ -304,6 +304,158 @@ class SupabaseClient:
             logger.error(f"Error fetching all users: {e}")
             return []
     
+    # ==================== Authorized Users Operations ====================
+    
+    def add_authorized_user(
+        self,
+        email: str,
+        organization_id: str,
+        assigned_role: str = 'player',
+        authorized_by: Optional[str] = None,
+        full_name: Optional[str] = None,
+        authorization_note: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Add a user to the authorized users list for an organization
+        
+        Args:
+            email: User's email address
+            organization_id: Organization UUID
+            assigned_role: Role to assign when user signs up (default: 'player')
+            authorized_by: UUID of user who authorized this (optional)
+            full_name: Full name of authorized user (optional)
+            authorization_note: Note about the authorization (optional)
+            
+        Returns:
+            Created authorized user record or None if failed
+        """
+        try:
+            auth_data = {
+                "email": email.lower(),
+                "organization_id": organization_id,
+                "assigned_role": assigned_role,
+                "authorized_by": authorized_by,
+                "full_name": full_name,
+                "authorization_note": authorization_note,
+                "is_active": True,
+                "has_signed_up": False
+            }
+            
+            response = self.client.from_("authorized_users").insert(auth_data).execute()
+            if response.data and len(response.data) > 0:
+                logger.info(f"Added authorized user: {email} for organization {organization_id}")
+                return response.data[0]
+            return None
+        except Exception as e:
+            logger.error(f"Error adding authorized user: {e}")
+            return None
+    
+    def get_authorized_users_by_organization(self, organization_id: str) -> List[Dict[str, Any]]:
+        """
+        Get all authorized users for an organization
+        
+        Args:
+            organization_id: Organization UUID
+            
+        Returns:
+            List of authorized user records
+        """
+        try:
+            response = self.client.from_("authorized_users").select("*").eq(
+                "organization_id", organization_id
+            ).order("created_at", desc=True).execute()
+            return response.data if response.data else []
+        except Exception as e:
+            logger.error(f"Error fetching authorized users: {e}")
+            return []
+    
+    def check_user_authorized(self, email: str, organization_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Check if a user is authorized for an organization
+        
+        Args:
+            email: User's email address
+            organization_id: Organization UUID
+            
+        Returns:
+            Authorized user record if found and active, None otherwise
+        """
+        try:
+            response = self.client.from_("authorized_users").select("*").eq(
+                "email", email.lower()
+            ).eq("organization_id", organization_id).eq("is_active", True).execute()
+            
+            if response.data and len(response.data) > 0:
+                return response.data[0]
+            return None
+        except Exception as e:
+            logger.error(f"Error checking user authorization: {e}")
+            return None
+    
+    def check_user_authorized_any_org(self, email: str) -> Optional[Dict[str, Any]]:
+        """
+        Check if a user is authorized for any organization
+        
+        Args:
+            email: User's email address
+            
+        Returns:
+            First authorized user record if found and active, None otherwise
+        """
+        try:
+            response = self.client.from_("authorized_users").select("*").eq(
+                "email", email.lower()
+            ).eq("is_active", True).eq("has_signed_up", False).execute()
+            
+            if response.data and len(response.data) > 0:
+                return response.data[0]
+            return None
+        except Exception as e:
+            logger.error(f"Error checking user authorization: {e}")
+            return None
+    
+    def mark_authorized_user_signed_up(self, email: str, organization_id: str, user_id: str) -> bool:
+        """
+        Mark an authorized user as having signed up
+        
+        Args:
+            email: User's email address
+            organization_id: Organization UUID
+            user_id: Created user's UUID
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            response = self.client.from_("authorized_users").update({
+                "has_signed_up": True,
+                "user_id": user_id,
+                "signed_up_at": datetime.utcnow().isoformat()
+            }).eq("email", email.lower()).eq("organization_id", organization_id).execute()
+            return bool(response.data)
+        except Exception as e:
+            logger.error(f"Error marking user as signed up: {e}")
+            return False
+    
+    def remove_authorized_user(self, authorized_user_id: str) -> bool:
+        """
+        Remove an authorized user (or mark as inactive)
+        
+        Args:
+            authorized_user_id: Authorized user record UUID
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            response = self.client.from_("authorized_users").update({
+                "is_active": False
+            }).eq("id", authorized_user_id).execute()
+            return bool(response.data)
+        except Exception as e:
+            logger.error(f"Error removing authorized user: {e}")
+            return False
+    
     # ==================== Permission Operations ====================
     
     def get_user_permissions(self, user_id: str) -> List[str]:
