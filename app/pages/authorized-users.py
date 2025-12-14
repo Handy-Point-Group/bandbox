@@ -258,28 +258,32 @@ with tab2:
                     )
                     
                     if result:
-                        # Update user's organization if they don't have one
-                        if not user_to_invite.get('primary_organization_id'):
-                            supabase.client.from_("users").update({
-                                "primary_organization_id": selected_org_id,
-                                "role": invite_role
-                            }).eq("id", user_to_invite['id']).execute()
-                            
-                            # Mark as signed up immediately since they already exist
+                        # Add user to this organization (supports multi-org)
+                        add_success = supabase.add_user_to_organization(
+                            user_to_invite['id'],
+                            selected_org_id,
+                            invite_role
+                        )
+                        
+                        if add_success:
+                            # Mark as signed up in authorized_users
                             supabase.mark_authorized_user_signed_up(
                                 user_to_invite['email'], 
                                 selected_org_id, 
                                 user_to_invite['id']
                             )
                             
-                            st.success(f"✅ User {user_to_invite['email']} has been added to the organization!")
-                            st.info(f"🎉 They now have the '{invite_role}' role and can access organization data.")
+                            if not user_to_invite.get('primary_organization_id'):
+                                st.success(f"✅ User {user_to_invite['email']} has been added to the organization!")
+                                st.info(f"🎉 They now have the '{invite_role}' role and can access organization data.")
+                            else:
+                                st.success(f"✅ User {user_to_invite['email']} has been added to {selected_org_name}!")
+                                st.info(f"🏢 They can now switch between organizations and access data from both.")
+                            
+                            st.balloons()
+                            st.rerun()
                         else:
-                            st.success(f"✅ Invitation sent to {user_to_invite['email']}!")
-                            st.info("📧 They will be notified and can accept the invitation.")
-                        
-                        st.balloons()
-                        st.rerun()
+                            st.error("❌ Failed to add user to organization. Please try again.")
                     else:
                         st.error("❌ Failed to send invitation. Please try again.")
 

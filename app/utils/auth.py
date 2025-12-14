@@ -4,7 +4,7 @@ Handles Google OIDC authentication + Email/Password authentication + Supabase us
 """
 
 import streamlit as st
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from .supabase_client import get_supabase_client
 from .password_auth import get_password_auth
 import logging
@@ -34,6 +34,10 @@ class AuthManager:
             st.session_state.permissions = []
         if 'auth_method' not in st.session_state:
             st.session_state.auth_method = None  # 'google' or 'password'
+        if 'selected_organization_id' not in st.session_state:
+            st.session_state.selected_organization_id = None
+        if 'user_organizations' not in st.session_state:
+            st.session_state.user_organizations = []
     
     def check_authentication(self) -> bool:
         """
@@ -211,12 +215,72 @@ class AuthManager:
     
     def get_current_organization(self) -> Optional[Dict[str, Any]]:
         """
-        Get current user's organization data
+        Get current user's selected organization data
         
         Returns:
             Organization data dictionary or None
         """
-        return st.session_state.organization_data if st.session_state.authenticated else None
+        if not st.session_state.authenticated:
+            return None
+        
+        # If user has selected a different org, load that one
+        if st.session_state.selected_organization_id:
+            return self.supabase.get_organization(st.session_state.selected_organization_id)
+        
+        # Otherwise return the primary org
+        return st.session_state.organization_data
+    
+    def get_user_organizations(self) -> List[Dict[str, Any]]:
+        """
+        Get all organizations the user belongs to
+        
+        Returns:
+            List of organization dictionaries
+        """
+        if not st.session_state.authenticated or not st.session_state.user_data:
+            return []
+        
+        user = st.session_state.user_data
+        orgs = []
+        
+        # Add primary organization
+        if user.get('primary_organization_id'):
+            primary_org = self.supabase.get_organization(user['primary_organization_id'])
+            if primary_org:
+                orgs.append(primary_org)
+        
+        # Add additional organizations if multi_org is enabled
+        if user.get('multi_org') and user.get('organization_ids'):
+            for org_id in user['organization_ids']:
+                # Skip if it's the primary (already added)
+                if org_id == user.get('primary_organization_id'):
+                    continue
+                org = self.supabase.get_organization(org_id)
+                if org:
+                    orgs.append(org)
+        
+        return orgs
+    
+    def switch_organization(self, organization_id: str):
+        """
+        Switch to a different organization
+        
+        Args:
+            organization_id: UUID of organization to switch to
+        """
+        user = st.session_state.user_data
+        if not user:
+            return
+        
+        # Verify user has access to this organization
+        user_org_ids = [user.get('primary_organization_id')]
+        if user.get('multi_org') and user.get('organization_ids'):
+            user_org_ids.extend(user['organization_ids'])
+        
+        if organization_id in user_org_ids:
+            st.session_state.selected_organization_id = organization_id
+            st.session_state.organization_data = self.supabase.get_organization(organization_id)
+            st.rerun()
     
     def has_role(self, required_role: str) -> bool:
         """
@@ -307,17 +371,42 @@ class AuthManager:
             st.stop()
     
     def display_user_info(self):
-        """Display current user information in sidebar"""
+        """Display current user information in sidebar with organization switcher"""
         if st.session_state.authenticated and st.session_state.user_data:
             user = st.session_state.user_data
-            org = st.session_state.organization_data
+            current_org = self.get_current_organization()
             
             with st.sidebar:
                 st.divider()
                 st.write("**Logged in as:**")
                 st.write(f"👤 {user.get('full_name', 'Unknown')}")
                 st.write(f"✉️ {user.get('email', '')}")
-                st.write(f"🏢 {org.get('name', 'No Organization') if org else 'No Organization'}")
+                
+                # Organization switcher for multi-org users
+                user_orgs = self.get_user_organizations()
+                
+                if len(user_orgs) > 1:
+                    # User belongs to multiple organizations - show switcher
+                    org_names = {org['name']: org['id'] for org in user_orgs}
+                    current_org_name = current_org['name'] if current_org else list(org_names.keys())[0]
+                    
+                    selected_org_name = st.selectbox(
+                        "🏢 Organization:",
+                        options=list(org_names.keys()),
+                        index=list(org_names.keys()).index(current_org_name) if current_org_name in org_names else 0,
+                        key="org_switcher"
+                    )
+                    
+                    # If user changed selection, switch organization
+                    if selected_org_name != current_org_name:
+                        self.switch_organization(org_names[selected_org_name])
+                elif len(user_orgs) == 1:
+                    # User belongs to one organization
+                    st.write(f"🏢 {user_orgs[0].get('name', 'No Organization')}")
+                else:
+                    # User has no organizations
+                    st.write("🏢 No Organization")
+                
                 st.write(f"👔 Role: {user.get('role', 'user').title()}")
                 
                 if st.button("🚪 Logout", use_container_width=True):

@@ -456,6 +456,103 @@ class SupabaseClient:
             logger.error(f"Error removing authorized user: {e}")
             return False
     
+    def add_user_to_organization(self, user_id: str, organization_id: str, role: str = None) -> bool:
+        """
+        Add a user to an additional organization (for multi-org support)
+        
+        Args:
+            user_id: User's UUID
+            organization_id: Organization UUID to add
+            role: Optional role for this organization (if None, keeps current role)
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            # Get current user data
+            response = self.client.from_("users").select("*").eq("id", user_id).execute()
+            if not response.data or len(response.data) == 0:
+                logger.error(f"User not found: {user_id}")
+                return False
+            
+            user = response.data[0]
+            
+            # Check if this is their first organization
+            if not user.get('primary_organization_id'):
+                # Set as primary organization
+                update_data = {
+                    "primary_organization_id": organization_id
+                }
+                if role:
+                    update_data["role"] = role
+                    
+                response = self.client.from_("users").update(update_data).eq("id", user_id).execute()
+                return bool(response.data)
+            
+            # Add to organization_ids array for multi-org
+            org_ids = user.get('organization_ids', []) or []
+            
+            # Don't add if already in the list
+            if organization_id not in org_ids and organization_id != user.get('primary_organization_id'):
+                org_ids.append(organization_id)
+                
+                response = self.client.from_("users").update({
+                    "multi_org": True,
+                    "organization_ids": org_ids
+                }).eq("id", user_id).execute()
+                
+                logger.info(f"Added user {user_id} to organization {organization_id}")
+                return bool(response.data)
+            
+            return True  # Already in org
+            
+        except Exception as e:
+            logger.error(f"Error adding user to organization: {e}")
+            return False
+    
+    def remove_user_from_organization(self, user_id: str, organization_id: str) -> bool:
+        """
+        Remove a user from an organization (for multi-org support)
+        
+        Args:
+            user_id: User's UUID
+            organization_id: Organization UUID to remove
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            # Get current user data
+            response = self.client.from_("users").select("*").eq("id", user_id).execute()
+            if not response.data or len(response.data) == 0:
+                return False
+            
+            user = response.data[0]
+            
+            # Can't remove primary organization
+            if user.get('primary_organization_id') == organization_id:
+                logger.warning(f"Cannot remove user's primary organization")
+                return False
+            
+            # Remove from organization_ids array
+            org_ids = user.get('organization_ids', []) or []
+            if organization_id in org_ids:
+                org_ids.remove(organization_id)
+                
+                update_data = {"organization_ids": org_ids}
+                # If no more additional orgs, disable multi_org flag
+                if len(org_ids) == 0:
+                    update_data["multi_org"] = False
+                
+                response = self.client.from_("users").update(update_data).eq("id", user_id).execute()
+                return bool(response.data)
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error removing user from organization: {e}")
+            return False
+    
     # ==================== Permission Operations ====================
     
     def get_user_permissions(self, user_id: str) -> List[str]:
