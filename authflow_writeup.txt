@@ -1,0 +1,15 @@
+The Basic Flow
+There are two ways users can join:
+Option 1: Pre-authorized signup
+When an admin adds someone to the authorized_users table first, that person can sign up and automatically gets assigned to the organization with whatever role the admin specified. During signup, the system checks if their email exists in authorized_users where is_active = TRUE and has_signed_up = FALSE. If found, it shows them which org they're joining and what role they'll get. After they create their account, the system updates authorized_users to mark has_signed_up = TRUE and links the new user record.
+Option 2: Open signup then invitation
+Anyone can create an account without being pre-authorized. They sign up with no organization (primary_organization_id = NULL), log in, and see a welcome screen saying they're waiting for an invitation. Later, when an admin invites them through the "Invite Existing User" tab, it adds them to authorized_users and updates their user record with the organization ID and role. They immediately get access.
+SQL Tables
+Two main tables handle this:
+authorized_users - Acts as a permission whitelist. Contains email, organization_id, assigned_role, is_active, has_signed_up, and user_id. Has a unique constraint on (email, organization_id) so you can't authorize the same person twice for one org.
+users - The actual user accounts. Has email, password_hash, primary_organization_id (can be NULL), role, and is_active. When someone signs up, their password gets bcrypt hashed and stored here.
+Permission Checks
+During signup, it runs SELECT * FROM authorized_users WHERE email = ? AND is_active = TRUE AND has_signed_up = FALSE. If nothing comes back, signup still works but no org is assigned.
+For page access, each team page checks if current_org exists (meaning primary_organization_id IS NOT NULL). If not, it blocks access and shows a message to contact an admin. The navigation menu conditionally builds the page list - if you don't have an org, team pages don't appear at all. Admin pages check role hierarchy (team_admin, admin-org, superadmin) to decide visibility.
+When creating a user account, it does INSERT INTO users with either the org from authorized_users or NULL. Login does a SELECT * FROM users WHERE email = ? then verifies the bcrypt hash. When marking someone as signed up, it updates authorized_users with has_signed_up = TRUE, user_id = ?, signed_up_at = NOW().
+That's the core of it - the authorized_users table controls who can join which organization with what role, but the system allows signups without pre-authorization and handles the org assignment later.
