@@ -61,13 +61,13 @@ if not available_orgs:
 
 #%% Tabs
 
-tab1, tab2 = st.tabs(["➕ Add Authorized User", "📋 View Authorized Users"])
+tab1, tab2, tab3 = st.tabs(["➕ Authorize New User", "👥 Invite Existing User", "📋 View Authorized Users"])
 
 #%% Tab 1: Add Authorized User
 
 with tab1:
-    st.subheader("Add Authorized User")
-    st.markdown("Pre-authorize a user to join an organization with a specific role.")
+    st.subheader("Authorize New User (Pre-Authorization)")
+    st.markdown("Pre-authorize a NEW user (who doesn't have an account yet) to join an organization. They will be automatically assigned to this organization when they sign up.")
     
     with st.form("add_authorized_user_form"):
         col1, col2 = st.columns(2)
@@ -162,9 +162,130 @@ with tab1:
                         else:
                             st.error("❌ Failed to authorize user. Please try again.")
 
-#%% Tab 2: View Authorized Users
+#%% Tab 2: Invite Existing User
 
 with tab2:
+    st.subheader("Invite Existing User to Organization")
+    st.markdown("Invite users who already have accounts to join your organization.")
+    
+    with st.form("invite_existing_user_form"):
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Organization selection
+            org_dict = {org['name']: org['id'] for org in available_orgs}
+            selected_org_name = st.selectbox(
+                "Organization *",
+                options=list(org_dict.keys()),
+                help="Select the organization to invite this user to",
+                key="invite_org"
+            )
+            selected_org_id = org_dict[selected_org_name]
+            
+            # Get all users
+            all_users = supabase.get_all_users()
+            # Filter out users already in this organization
+            users_in_org = supabase.get_users_by_organization(selected_org_id)
+            users_in_org_ids = [u['id'] for u in users_in_org]
+            available_users = [u for u in all_users if u['id'] not in users_in_org_ids]
+            
+            if not available_users:
+                st.warning("No users available to invite. All users are already in this organization or no users exist.")
+                user_to_invite = None
+            else:
+                user_dict = {f"{u['email']} ({u['full_name']})": u for u in available_users}
+                selected_user_key = st.selectbox(
+                    "Select User to Invite *",
+                    options=list(user_dict.keys()),
+                    help="Select an existing user to invite"
+                )
+                user_to_invite = user_dict[selected_user_key]
+        
+        with col2:
+            # Role selection
+            if user_role == 'superadmin':
+                role_options = ['player', 'coach', 'admin', 'admin-team', 'admin-org']
+            elif user_role == 'admin-org':
+                role_options = ['player', 'coach', 'admin', 'admin-team']
+            else:
+                role_options = ['player', 'coach', 'admin']
+            
+            invite_role = st.selectbox(
+                "Assigned Role *",
+                options=role_options,
+                format_func=lambda x: {
+                    'player': 'Player - Basic access',
+                    'coach': 'Coach - Can edit and upload data',
+                    'admin': 'Admin - Can manage team',
+                    'admin-team': 'Team Admin - Can manage team users',
+                    'admin-org': 'Organization Admin - Full org control'
+                }[x],
+                help="Role that will be assigned when user accepts invitation",
+                key="invite_role"
+            )
+            
+            invite_note = st.text_area(
+                "Invitation Note",
+                placeholder="e.g., Welcome to the team!",
+                help="Optional note about this invitation",
+                height=120,
+                key="invite_note"
+            )
+        
+        submit_invite = st.form_submit_button(
+            "📧 Send Invitation",
+            use_container_width=True,
+            type="primary"
+        )
+        
+        if submit_invite:
+            if not user_to_invite:
+                st.error("❌ No users available to invite")
+            else:
+                # Check if already authorized
+                existing_auth = supabase.check_user_authorized(user_to_invite['email'], selected_org_id)
+                if existing_auth:
+                    st.error(f"❌ User {user_to_invite['email']} is already authorized for this organization")
+                else:
+                    # Add to authorized users
+                    result = supabase.add_authorized_user(
+                        email=user_to_invite['email'],
+                        organization_id=selected_org_id,
+                        assigned_role=invite_role,
+                        authorized_by=current_user['id'],
+                        full_name=user_to_invite['full_name'],
+                        authorization_note=invite_note if invite_note else "Invited to join organization"
+                    )
+                    
+                    if result:
+                        # Update user's organization if they don't have one
+                        if not user_to_invite.get('primary_organization_id'):
+                            supabase.client.from_("users").update({
+                                "primary_organization_id": selected_org_id,
+                                "role": invite_role
+                            }).eq("id", user_to_invite['id']).execute()
+                            
+                            # Mark as signed up immediately since they already exist
+                            supabase.mark_authorized_user_signed_up(
+                                user_to_invite['email'], 
+                                selected_org_id, 
+                                user_to_invite['id']
+                            )
+                            
+                            st.success(f"✅ User {user_to_invite['email']} has been added to the organization!")
+                            st.info(f"🎉 They now have the '{invite_role}' role and can access organization data.")
+                        else:
+                            st.success(f"✅ Invitation sent to {user_to_invite['email']}!")
+                            st.info("📧 They will be notified and can accept the invitation.")
+                        
+                        st.balloons()
+                        st.rerun()
+                    else:
+                        st.error("❌ Failed to send invitation. Please try again.")
+
+#%% Tab 3: View Authorized Users
+
+with tab3:
     st.subheader("Authorized Users")
     
     # Organization filter

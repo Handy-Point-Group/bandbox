@@ -18,7 +18,6 @@ sys.path.append('..')
 from utils import get_auth_manager, get_supabase_client
 
 #%% Authentication Check
-# Ensure user is authenticated and authorized for their organization
 auth = get_auth_manager()
 supabase_client = get_supabase_client()
 
@@ -26,23 +25,18 @@ if not auth.check_authentication():
     st.error("⚠️ You must be logged in to access this page.")
     st.stop()
 
-# Get current user and check if they are authorized for their organization
 current_user = auth.get_current_user()
 current_org = auth.get_current_organization()
 
-if not current_user or not current_org:
-    st.error("❌ No user or organization data found. Please contact your administrator.")
-    st.stop()
-
-# Check if user is in authorized_users for their organization
-authorized_record = supabase_client.check_user_authorized(
-    current_user['email'], 
-    current_org['id']
-)
-
-if not authorized_record:
-    st.error("🚫 Access Denied: You are not authorized to access this organization's data.")
-    st.warning("Please contact your organization administrator to be added as an authorized user.")
+# Check if user has an organization
+if not current_org:
+    st.warning("⚠️ You are not currently part of an organization.")
+    st.info("""
+    **To access this page:**
+    - Contact your team/organization administrator
+    - Ask them to invite you to their organization
+    - Once invited, you'll have access to team data
+    """)
     st.stop()
 
 #%% Connect to Supabase

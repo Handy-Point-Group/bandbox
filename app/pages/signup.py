@@ -25,8 +25,6 @@ st.markdown("---")
 with st.form("signup_form"):
     st.subheader("Account Information")
     
-    st.info("⚠️ **Important:** You must be pre-authorized by your organization administrator to create an account.")
-    
     col1, col2 = st.columns(2)
     
     with col1:
@@ -39,21 +37,21 @@ with st.form("signup_form"):
     
     st.divider()
     
-    st.subheader("Organization Authorization")
+    st.subheader("Organization (Optional)")
     
     # Initialize variables
     pre_authorized = False
-    assigned_role = None
+    assigned_role = 'player'  # Default role for non-authorized signups
     auth_record_id = None
     org_dict = {}
-    selected_org_name = None
+    selected_org_id = None
     
     # Check if user is pre-authorized (only if email is entered)
     if email:
         authorized_record = supabase.check_user_authorized_any_org(email)
         
         if authorized_record:
-            # User is pre-authorized - show their organization
+            # User is pre-authorized - automatically assign their organization
             auth_org = supabase.get_organization(authorized_record['organization_id'])
             
             st.success(f"✅ You are pre-authorized to join **{auth_org['name']}**")
@@ -63,24 +61,21 @@ with st.form("signup_form"):
                 st.info(f"📝 Note: {authorized_record['authorization_note']}")
             
             # Store for later use
-            org_dict = {auth_org['name']: auth_org['id']}
-            selected_org_name = auth_org['name']
+            selected_org_id = auth_org['id']
             pre_authorized = True
             assigned_role = authorized_record['assigned_role']
             auth_record_id = authorized_record['id']
         else:
-            # User NOT pre-authorized - block signup
-            st.error("❌ **Access Denied:** Your email is not authorized to create an account.")
-            st.warning("""
-            **To gain access:**
-            1. Contact your team/organization administrator
-            2. Request to be added as an authorized user
-            3. Return here to complete your signup
+            # User NOT pre-authorized - allow signup without organization
+            st.info("""
+            💡 **No pre-authorization found**
+            
+            You can create an account now and join an organization later when invited by an administrator.
             """)
-            st.info("💡 Once authorized, your organization and role will be automatically assigned.")
+            selected_org_id = None
     else:
-        # Email not entered yet - show instruction
-        st.info("👆 Enter your email address above to check your authorization status.")
+        # Email not entered yet
+        st.info("👆 Enter your email address above. If you're pre-authorized, your organization will be automatically assigned.")
     
     st.divider()
     
@@ -106,15 +101,6 @@ with st.form("signup_form"):
         
         if not full_name or not email or not password or not confirm_password:
             errors.append("❌ All fields are required")
-        
-        # CRITICAL: Check if user is pre-authorized (REQUIRED for signup)
-        if not pre_authorized:
-            errors.append("❌ You must be pre-authorized by your organization to create an account")
-            errors.append("💡 Contact your team administrator to be added to the authorized users list")
-        
-        # Validate organization is set
-        if not selected_org_name or not org_dict:
-            errors.append("❌ No organization assigned. Please contact your administrator.")
         
         if password != confirm_password:
             errors.append("❌ Passwords do not match")
@@ -143,26 +129,28 @@ with st.form("signup_form"):
                 if existing_user:
                     st.error("❌ An account with this email already exists. Please login instead.")
                 else:
-                    # Use the pre-authorized organization
-                    org_id = org_dict[selected_org_name]
-                    
-                    # Create the user with the assigned role from authorization
+                    # Create the user (with or without organization)
                     new_user = password_auth.create_user_with_password(
                         email=email,
                         password=password,
                         full_name=full_name,
-                        organization_id=org_id,
+                        organization_id=selected_org_id,  # Can be None
                         role=assigned_role
                     )
                     
                     if new_user:
-                        # Mark user as signed up in authorized_users table
-                        supabase.mark_authorized_user_signed_up(email, org_id, new_user['id'])
+                        # If user was pre-authorized, mark them as signed up
+                        if pre_authorized and auth_record_id and selected_org_id:
+                            supabase.mark_authorized_user_signed_up(email, selected_org_id, new_user['id'])
                         
                         st.success("✅ Account created successfully!")
                         
-                        if assigned_role != 'player':
-                            st.success(f"🎉 You have been assigned the '{assigned_role}' role!")
+                        if pre_authorized:
+                            if assigned_role != 'player':
+                                st.success(f"🎉 You have been assigned the '{assigned_role}' role!")
+                            st.info(f"🏢 You have been added to the organization.")
+                        else:
+                            st.info("💡 You can join an organization when invited by an administrator.")
                         
                         st.balloons()
                         st.info("🎉 Redirecting to login page...")

@@ -27,18 +27,9 @@ if not auth.check_authentication():
 current_user = auth.get_current_user()
 current_org = auth.get_current_organization()
 
-if not current_user or not current_org:
-    st.error("❌ No user or organization data found. Please contact your administrator.")
-    st.stop()
-
-authorized_record = supabase_client.check_user_authorized(
-    current_user['email'], 
-    current_org['id']
-)
-
-if not authorized_record:
-    st.error("🚫 Access Denied: You are not authorized to access this organization's data.")
-    st.warning("Please contact your organization administrator to be added as an authorized user.")
+if not current_org:
+    st.warning("⚠️ You are not currently part of an organization.")
+    st.info("Contact your team administrator to be invited to an organization.")
     st.stop()
 
 #%% Connect to Supabase
