@@ -10,6 +10,34 @@ from decimal import Decimal
 import os
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+import sys
+sys.path.append('..')
+from utils import get_auth_manager, get_supabase_client
+
+#%% Authentication Check
+auth = get_auth_manager()
+supabase_client = get_supabase_client()
+
+if not auth.check_authentication():
+    st.error("⚠️ You must be logged in to access this page.")
+    st.stop()
+
+current_user = auth.get_current_user()
+current_org = auth.get_current_organization()
+
+if not current_user or not current_org:
+    st.error("❌ No user or organization data found. Please contact your administrator.")
+    st.stop()
+
+authorized_record = supabase_client.check_user_authorized(
+    current_user['email'], 
+    current_org['id']
+)
+
+if not authorized_record:
+    st.error("🚫 Access Denied: You are not authorized to access this organization's data.")
+    st.warning("Please contact your organization administrator to be added as an authorized user.")
+    st.stop()
 
 #%% Connect to Supabase
 db = st.connection("supabase",type=SupabaseConnection)

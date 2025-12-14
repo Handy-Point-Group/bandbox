@@ -21,13 +21,12 @@ admin_user_management = st.Page("pages/admin-user-management.py",title="User Man
 #%% Run the App
 st.set_page_config(layout="wide")
 
-st.logo(r'app/images/lighthouse 1.png', size='large')
-
 # Initialize authentication
 auth = get_auth_manager()
 
 # Check if user is authenticated
 if not auth.check_authentication():
+    # Show only login/signup options - NO SIDEBAR, NO LOGO, NO NAVIGATION
     st.warning("⚠️ You must be logged in to access this application.")
     st.info("Please log in or create an account to continue.")
     
@@ -42,6 +41,9 @@ if not auth.check_authentication():
             st.switch_page("pages/signup.py")
     
     st.stop()
+
+# Only show logo and navigation AFTER authentication
+st.logo(r'app/images/lighthouse 1.png', size='large')
 
 # Display user info in sidebar
 auth.display_user_info()
