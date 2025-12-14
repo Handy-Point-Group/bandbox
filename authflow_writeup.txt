@@ -13,3 +13,13 @@ During signup, it runs SELECT * FROM authorized_users WHERE email = ? AND is_act
 For page access, each team page checks if current_org exists (meaning primary_organization_id IS NOT NULL). If not, it blocks access and shows a message to contact an admin. The navigation menu conditionally builds the page list - if you don't have an org, team pages don't appear at all. Admin pages check role hierarchy (team_admin, admin-org, superadmin) to decide visibility.
 When creating a user account, it does INSERT INTO users with either the org from authorized_users or NULL. Login does a SELECT * FROM users WHERE email = ? then verifies the bcrypt hash. When marking someone as signed up, it updates authorized_users with has_signed_up = TRUE, user_id = ?, signed_up_at = NOW().
 That's the core of it - the authorized_users table controls who can join which organization with what role, but the system allows signups without pre-authorization and handles the org assignment later.
+
+Multi org jawn
+ultiple Organizations:
+Users can now belong to multiple organizations at once. When you log in, if you're part of more than one organization, you'll see a dropdown in the sidebar where you can switch between them. Each time you switch, all the pages (roster, leaderboards, player stats, etc.) will show data from that organization only.
+In the database, each user has a "primary organization" that's their main one, plus an array called "organization_ids" that stores any additional organizations they belong to. A flag called "multi_org" is set to true when someone is in 2+ organizations.
+Invitation Flow:
+There are two ways to add users to an organization:
+Pre-authorize new users - If someone doesn't have an account yet, you can pre-authorize their email. When they sign up, they automatically get added to your organization with the role you specified.
+Invite existing users - If someone already has an account, you can invite them to join your organization. If they don't have any organization yet, they get added immediately. If they already belong to another organization, they get added as a second organization and can switch between both.
+The system checks the "authorized_users" table to see who's allowed to join which organizations. When someone is invited and accepts, their user record gets updated with the new organization,
