@@ -12,6 +12,25 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib.ticker import MultipleLocator
 from dateutil.relativedelta import relativedelta
+import sys
+sys.path.append('..')
+from utils import get_auth_manager, get_supabase_client
+
+#%% Authentication Check
+auth = get_auth_manager()
+supabase_client = get_supabase_client()
+
+if not auth.check_authentication():
+    st.error("⚠️ You must be logged in to access this page.")
+    st.stop()
+
+current_user = auth.get_current_user()
+current_org = auth.get_current_organization()
+
+if not current_org:
+    st.warning("⚠️ You are not currently part of an organization.")
+    st.info("Contact your team administrator to be invited to an organization.")
+    st.stop()
 
 #%% Connect to Supabase
 db = st.connection("supabase",type=SupabaseConnection)

@@ -13,6 +13,31 @@ import matplotlib.colors as mcolors
 from matplotlib.ticker import MultipleLocator
 from matplotlib.patches import Ellipse
 from dateutil.relativedelta import relativedelta
+import sys
+sys.path.append('..')
+from utils import get_auth_manager, get_supabase_client
+
+#%% Authentication Check
+auth = get_auth_manager()
+supabase_client = get_supabase_client()
+
+if not auth.check_authentication():
+    st.error("⚠️ You must be logged in to access this page.")
+    st.stop()
+
+current_user = auth.get_current_user()
+current_org = auth.get_current_organization()
+
+# Check if user has an organization
+if not current_org:
+    st.warning("⚠️ You are not currently part of an organization.")
+    st.info("""
+    **To access this page:**
+    - Contact your team/organization administrator
+    - Ask them to invite you to their organization
+    - Once invited, you'll have access to team data
+    """)
+    st.stop()
 
 #%% Connect to Supabase
 db = st.connection("supabase",type=SupabaseConnection)
