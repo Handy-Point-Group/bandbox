@@ -58,6 +58,7 @@ rapsodo_hitting = fetch_table_data('rapsodo_hitting')
 rapsodo_pitching = fetch_table_data('rapsodo_pitching')
 swings = fetch_table_data('swings')
 dk_curves = fetch_table_data('dk_curves')
+video = fetch_table_data('video')
 
 #%% Data Adjustments
 
@@ -184,23 +185,27 @@ if len(player_dkhit) > 0:
     barrel_speed_avg = round(pd.to_numeric(player_dkhit['max_barrel_speed'], errors='coerce').mean(), 1)
     impact_momentum_avg = round(pd.to_numeric(player_dkhit['impact_momentum'], errors='coerce').mean(), 1)
     attack_angle_avg = round(pd.to_numeric(player_dkhit['attack_angle'], errors='coerce').mean(), 1)
+    trigger_to_impact_avg = round(pd.to_numeric(player_dkhit['trigger_to_impact'], errors='coerce').mean(), 1)
     hand_speed_std = round(pd.to_numeric(player_dkhit['max_hand_speed'], errors='coerce').std(), 1)
     barrel_speed_std = round(pd.to_numeric(player_dkhit['max_barrel_speed'], errors='coerce').std(), 1)
     impact_momentum_std = round(pd.to_numeric(player_dkhit['impact_momentum'], errors='coerce').std(), 1)
     attack_angle_std = round(pd.to_numeric(player_dkhit['attack_angle'], errors='coerce').std(), 1)
+    trigger_to_impact_std = round(pd.to_numeric(player_dkhit['trigger_to_impact'], errors='coerce').std(), 1)
     hs_curve = dk_curves_class[dk_curves_class['metric'] == 'hand_speed'].iloc[0]
     bs_curve = dk_curves_class[dk_curves_class['metric'] == 'barrel_speed'].iloc[0]
     im_curve = dk_curves_class[dk_curves_class['metric'] == 'impact_momentum'].iloc[0]
     aa_curve = dk_curves_class[dk_curves_class['metric'] == 'attack_angle'].iloc[0]
+    ti_curve = dk_curves_class[dk_curves_class['metric'] == 'trigger_to_impact'].iloc[0]
     hand_speed_pct = get_percentile(hand_speed_avg, hs_curve)
     barrel_speed_pct = get_percentile(barrel_speed_avg, bs_curve)
     impact_momentum_pct = get_percentile(impact_momentum_avg, im_curve)
     attack_angle_pct = get_percentile(attack_angle_avg, aa_curve)
+    trigger_to_impact_pct = 100 - get_percentile(trigger_to_impact_avg, ti_curve)
     dk_df = pd.DataFrame({
-        'Metric': ['Hand Speed', 'Barrel Speed', 'Impact', 'Attack Angle'],
-        'Average': [hand_speed_avg, barrel_speed_avg, impact_momentum_avg, attack_angle_avg],
-        'Standard Deviation': [hand_speed_std, barrel_speed_std, impact_momentum_std, attack_angle_std],
-        'Percentile by Class': [hand_speed_pct, barrel_speed_pct, impact_momentum_pct, attack_angle_pct]
+        'Metric': ['Hand Speed', 'Barrel Speed', 'Trigger', 'Impact', 'Attack Angle'],
+        'Average': [hand_speed_avg, barrel_speed_avg, trigger_to_impact_avg, impact_momentum_avg, attack_angle_avg],
+        'Standard Deviation': [hand_speed_std, barrel_speed_std, trigger_to_impact_std, impact_momentum_std, attack_angle_std],
+        'Percentile by Class': [hand_speed_pct, barrel_speed_pct, trigger_to_impact_pct, impact_momentum_pct, attack_angle_pct]
     })
 
     # Create date-grouped dataset
@@ -208,6 +213,7 @@ if len(player_dkhit) > 0:
     hit_numeric_cols = [
         'max_hand_speed',
         'max_barrel_speed',
+        'trigger_to_impact',
         'impact_momentum',
         'attack_angle'
     ]
@@ -229,6 +235,7 @@ if len(player_dkhit) > 0:
     curve_lookup = {
         'max_hand_speed': dk_curves_class[dk_curves_class['metric'] == 'hand_speed'].iloc[0],
         'max_barrel_speed': dk_curves_class[dk_curves_class['metric'] == 'barrel_speed'].iloc[0],
+        'trigger_to_impact': dk_curves_class[dk_curves_class['metric'] == 'trigger_to_impact'].iloc[0],
         'impact_momentum': dk_curves_class[dk_curves_class['metric'] == 'impact_momentum'].iloc[0],
         'attack_angle': dk_curves_class[dk_curves_class['metric'] == 'attack_angle'].iloc[0]
     }
@@ -240,6 +247,12 @@ if len(player_dkhit) > 0:
         player_date_dk_stats[pct_col] = player_date_dk_stats[mean_col].apply(
             lambda val: get_percentile(val, curve_lookup[metric]) if pd.notna(val) else None
         )
+
+#%% Prepare Video
+
+player_video = video[video['player_id']==player_select]
+player_hitting_video = player_video[player_video['type']=='Hitter']
+player_pitching_video = player_video[player_video['type']=='Pitcher']
 
 #%% Prepare Rapsodo Hitting Stats
 
@@ -378,10 +391,10 @@ hitting, pitching = st.tabs(["Hitting", "Pitching"])
 
 with hitting:
     st.header("Hitting Data",divider = "yellow")
-    if len(player_dkhit) == 0 and len(player_raphit) == 0:
+    if len(player_dkhit) == 0 and len(player_raphit) == 0 and len(player_video) == 0:
         st.write('No Hitting Data Available')
     else:
-        hitting_charts, hitting_timelines = st.tabs(["Charts & Data","Timelines"])
+        hitting_charts, hitting_timelines, hitting_videos = st.tabs(["Charts & Data","Timelines","Video"])
         #%% Hitting Charts
         with hitting_charts:
             # Define custom colormap (blue → black → red)
@@ -440,6 +453,7 @@ with hitting:
                 metric_map = {
                     "Hand Speed": ("max_hand_speed_mean", "max_hand_speed_std", "max_hand_speed_pct"),
                     "Barrel Speed": ("max_barrel_speed_mean", "max_barrel_speed_std", "max_barrel_speed_pct"),
+                    "Trigger to Impact": ("trigger_to_impact_mean","trigger_to_impact_std","trigger_to_impact_pct"),
                     "Impact Momentum": ("impact_momentum_mean", "impact_momentum_std", "impact_momentum_pct"),
                     "Attack Angle": ("attack_angle_mean", "attack_angle_std", "attack_angle_pct")
                 }
@@ -526,17 +540,25 @@ with hitting:
                 )
 
                 st.pyplot(fig)
-
+        
+        #%% Hitting Videos
+        with hitting_videos:
+            if len(player_hitting_video) == 0:
+                st.write("No Hitting Video Available")
+            else:
+                for _, row in player_hitting_video.iterrows():
+                    st.write(f"{row['date']} - {row['view']}:")
+                    st.video(row['url'], width=250)
 
     #%% Display Pitching Stats
 
 with pitching:
 
     st.header("Pitching Data",divider = "yellow")
-    if len(player_rappitch) < 1:
-        st.write("No Rapsodo Pitching Stats Available")
+    if len(player_rappitch) == 0 and len(player_pitching_video) == 0:
+        st.write("No Pitching Data Available")
     else:
-        charts, timelines = st.tabs(["Charts & Data","Timelines"])
+        charts, timelines, pitching_videos = st.tabs(["Charts & Data","Timelines", "Video"])
         #%% Charts and pitch type data
         with charts:
             plot, table = st.columns(2,gap="large")
@@ -756,4 +778,12 @@ with pitching:
 
             # Display in Streamlit
             st.pyplot(fig_vel)
-
+        
+        #%% Pitching Video
+        with pitching_videos:
+            if len(player_pitching_video) == 0:
+                st.write("No Pitching Video Available")
+            else:
+                for _, row in player_pitching_video.iterrows():
+                    st.write(f"{row['date']} - {row['view']} - {row['pitch_type']}:")
+                    st.video(row['url'], width=250)
