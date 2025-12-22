@@ -1,5 +1,6 @@
 #%% Imports
 
+import os
 import pandas as pd
 import streamlit as st
 import sys, shutil, pathlib
@@ -22,8 +23,13 @@ def authenticate():
     st.sidebar.header('Login')
     entered_password = st.sidebar.text_input("Password", type='password')
     
-    # Access the password from secrets
-    correct_password = st.secrets["authentication"]["password"]
+    # Try environment variable first, fall back to st.secrets
+    try:
+        correct_password = os.environ.get("password")
+        if not correct_password:
+            correct_password = st.secrets["authentication"]["password"]
+    except Exception:
+        correct_password = os.environ.get("password", "")
 
     if entered_password == correct_password:
         return True

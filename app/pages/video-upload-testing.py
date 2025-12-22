@@ -15,7 +15,20 @@ from matplotlib.patches import Ellipse
 from dateutil.relativedelta import relativedelta
 
 #%% Connect to Supabase
-db = st.connection("supabase",type=SupabaseConnection)
+# Try environment variables first, fall back to st.secrets
+try:
+    supabase_url = os.environ.get("SUPABASE_URL")
+    supabase_key = os.environ.get("SUPABASE_KEY")
+    if supabase_url and supabase_key:
+        db = SupabaseConnection(
+            connection_name="supabase",
+            url=supabase_url,
+            key=supabase_key
+        )
+    else:
+        db = st.connection("supabase", type=SupabaseConnection)
+except Exception:
+    db = st.connection("supabase", type=SupabaseConnection)
 
 #%% Data Retrieval
 
