@@ -31,6 +31,21 @@ auth = get_auth_manager()
 
 # Check if user is authenticated
 if not auth.check_authentication():
+    # Hide sidebar completely when not logged in
+    st.markdown(
+        """
+        <style>
+            [data-testid="stSidebar"] {
+                display: none;
+            }
+            [data-testid="stSidebarCollapsedControl"] {
+                display: none;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    
     # Show clean login/signup screen - NO SIDEBAR, NO LOGO, NO NAVIGATION
     
     # Center the content
