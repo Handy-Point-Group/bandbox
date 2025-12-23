@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import sys
 sys.path.append('..')
-from utils import get_auth_manager, get_supabase_client
+from utils import get_auth_manager, get_supabase_client, get_active_organization, get_active_team
 
 #%% Authentication Check
 auth = get_auth_manager()
@@ -23,12 +23,19 @@ if not auth.check_authentication():
     st.stop()
 
 current_user = auth.get_current_user()
-current_org = auth.get_current_organization()
+
+# Get active org from switcher, fall back to auth
+current_org = get_active_organization() or auth.get_current_organization()
+active_team = get_active_team()
 
 if not current_org:
     st.warning("⚠️ You are not currently part of an organization.")
     st.info("Contact your team administrator to be invited to an organization.")
     st.stop()
+
+# Show active team if selected
+if active_team:
+    st.sidebar.success(f"📍 Viewing: {active_team.get('name', 'Team')}")
 
 #%% Connect to Supabase
 db = st.connection("supabase",type=SupabaseConnection)

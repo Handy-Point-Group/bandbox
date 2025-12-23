@@ -9,7 +9,9 @@ from utils import (
     get_auth_manager, 
     require_auth, 
     get_supabase_client,
-    get_current_user
+    get_current_user,
+    get_active_organization_id,
+    get_active_team_id
 )
 
 #%% Page Configuration
@@ -36,8 +38,9 @@ if user_role not in allowed_roles:
 
 supabase = get_supabase_client()
 
-# Get the user's organization
-user_org_id = current_user.get('primary_organization_id')
+# Get the active organization (from switcher) or fall back to primary
+user_org_id = get_active_organization_id() or current_user.get('primary_organization_id')
+active_team_id = get_active_team_id()
 
 #%% Find Coach Profile
 

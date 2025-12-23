@@ -3,7 +3,14 @@
 import pandas as pd
 import streamlit as st
 import sys, shutil, pathlib
-from utils import get_auth_manager, require_auth
+from utils import (
+    get_auth_manager, 
+    require_auth, 
+    get_supabase_client,
+    render_org_team_switcher,
+    get_active_organization,
+    get_active_team
+)
 
 # cache resets
 for p in pathlib.Path(".").rglob("__pycache__"):
@@ -67,14 +74,23 @@ auth.display_user_info()
 
 # Get current user and organization
 current_user = auth.get_current_user()
-current_org = auth.get_current_organization()
 user_role = current_user.get('role', 'player') if current_user else 'player'
+
+# Debug: Show current role in sidebar
+st.sidebar.caption(f"🔑 Role: {user_role}")
+
+# Render org/team switcher for players and coaches
+supabase = get_supabase_client()
+if current_user:
+    active_org, active_team = render_org_team_switcher(supabase, current_user)
+else:
+    active_org, active_team = None, None
+
+# Use active organization (from switcher) or fall back to primary
+current_org = active_org or auth.get_current_organization()
 
 # Build navigation based on organization and role
 pages = []
-
-# Debug: Show current role in sidebar (uncomment to debug)
-st.sidebar.caption(f"🔑 Role: {user_role}")
 
 # If user has an organization, show team pages
 if current_org:

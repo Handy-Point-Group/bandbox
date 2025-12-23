@@ -9,7 +9,9 @@ from utils import (
     get_auth_manager, 
     require_auth, 
     get_supabase_client,
-    get_current_user
+    get_current_user,
+    get_active_organization_id,
+    get_active_organization
 )
 
 #%% Page Configuration
@@ -36,14 +38,16 @@ if user_role not in allowed_roles:
 
 supabase = get_supabase_client()
 
-# Get the user's organization
-user_org_id = current_user.get('primary_organization_id')
+# Get the active organization (from switcher) or fall back to primary
+user_org_id = get_active_organization_id() or current_user.get('primary_organization_id')
 if not user_org_id:
     st.error("❌ No organization assigned. Please contact your administrator.")
     st.stop()
 
-# Fetch organization details
-user_org = supabase.get_organization(user_org_id)
+# Fetch organization details (use cached active org if available)
+user_org = get_active_organization()
+if not user_org:
+    user_org = supabase.get_organization(user_org_id)
 if not user_org:
     st.error("❌ Organization not found.")
     st.stop()
