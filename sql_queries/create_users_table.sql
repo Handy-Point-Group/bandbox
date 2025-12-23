@@ -17,6 +17,9 @@ CREATE TABLE IF NOT EXISTS public.users (
     multi_team BOOLEAN DEFAULT FALSE,
     team_ids UUID[] DEFAULT NULL,
 
+    -- Link to player profile (if user is a player)
+    player_id INTEGER REFERENCES public.players(id) ON DELETE SET NULL,
+
     role TEXT NOT NULL DEFAULT 'user' CHECK (
         role IN (
             'superadmin', 
@@ -42,6 +45,7 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
 CREATE INDEX IF NOT EXISTS idx_users_google_id ON public.users(google_id);
 CREATE INDEX IF NOT EXISTS idx_users_primary_organization ON public.users(primary_organization_id);
 CREATE INDEX IF NOT EXISTS idx_users_role ON public.users(role);
+CREATE INDEX IF NOT EXISTS idx_users_player_id ON public.users(player_id);
 
 -- Add helpful comments
 COMMENT ON TABLE public.users IS 'Stores user authentication and profile information, with support for multiple organizations and teams, and detailed roles';
@@ -56,4 +60,5 @@ COMMENT ON COLUMN public.users.multi_team IS 'Flag indicating if user belongs to
 COMMENT ON COLUMN public.users.team_ids IS 'Array of team IDs if multi_team is true';
 COMMENT ON COLUMN public.users.birthdate IS 'Date of birth of the user';
 COMMENT ON COLUMN public.users.privacy_agreement_link IS 'URL to the privacy agreement the user consented to';
+COMMENT ON COLUMN public.users.player_id IS 'Foreign key linking user to their player profile in the players table';
 
