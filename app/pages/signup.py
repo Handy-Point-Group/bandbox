@@ -22,16 +22,61 @@ supabase = get_supabase_client()
 
 st.markdown("---")
 
+#%% Step 1: Email Check (outside form for real-time authorization check)
+
+st.subheader("Step 1: Enter Your Email")
+st.caption("We'll check if you've been pre-authorized by an organization.")
+
+email = st.text_input("Email Address *", placeholder="your.email@example.com", key="signup_email")
+
+# Initialize authorization state
+pre_authorized = False
+assigned_role = 'player'
+auth_record_id = None
+selected_org_id = None
+auth_org = None
+authorized_record = None
+
+# Check for pre-authorization
+if email and '@' in email:
+    authorized_record = supabase.check_user_authorized_any_org(email)
+    
+    if authorized_record:
+        auth_org = supabase.get_organization(authorized_record['organization_id'])
+        
+        st.success(f"✅ **Welcome!** You are pre-authorized to join **{auth_org.get('name', 'Unknown Organization')}**")
+        
+        # Show role info
+        role_display = {
+            'admin-org': '🏢 Organization Administrator',
+            'admin': '👤 Team Admin',
+            'coach': '🧢 Coach',
+            'player': '⚾ Player'
+        }.get(authorized_record['assigned_role'], authorized_record['assigned_role'])
+        
+        st.info(f"📋 Your assigned role: **{role_display}**")
+        
+        if authorized_record.get('authorization_note'):
+            st.caption(f"📝 Note: {authorized_record['authorization_note']}")
+        
+        pre_authorized = True
+        assigned_role = authorized_record['assigned_role']
+        auth_record_id = authorized_record['id']
+        selected_org_id = auth_org['id']
+    else:
+        st.info("💡 No pre-authorization found. You can create an account and join an organization later when invited.")
+
+st.markdown("---")
+
 #%% Signup Form
 
 with st.form("signup_form"):
-    st.subheader("Account Information")
+    st.subheader("Step 2: Account Details")
     
     col1, col2 = st.columns(2)
     
     with col1:
         full_name = st.text_input("Full Name *", placeholder="John Doe")
-        email = st.text_input("Email Address *", placeholder="your.email@example.com")
     
     with col2:
         password = st.text_input("Password *", type="password", placeholder="Min. 8 characters")
@@ -40,13 +85,35 @@ with st.form("signup_form"):
     st.divider()
     
     #%% Account Type Selection
-    st.subheader("Account Type")
+    st.subheader("Step 3: Account Type")
+    
+    # Build account type options based on authorization
+    if pre_authorized and assigned_role in ['admin-org', 'admin']:
+        # Pre-authorized admin - show admin option
+        account_type_options = ["Organization Admin"]
+        account_type_index = 0
+        st.caption("✅ Your account type is set based on your pre-authorization.")
+    elif pre_authorized and assigned_role == 'coach':
+        # Pre-authorized coach
+        account_type_options = ["Coach"]
+        account_type_index = 0
+        st.caption("✅ Your account type is set based on your pre-authorization.")
+    elif pre_authorized and assigned_role == 'player':
+        # Pre-authorized player
+        account_type_options = ["Player"]
+        account_type_index = 0
+        st.caption("✅ Your account type is set based on your pre-authorization.")
+    else:
+        # Not pre-authorized - allow Player or Coach selection
+        account_type_options = ["Player", "Coach"]
+        account_type_index = 0
     
     account_type = st.selectbox(
         "I am a... *",
-        options=["Player", "Coach"],
-        index=0,
-        help="Select your role. Players can fill out additional profile information."
+        options=account_type_options,
+        index=account_type_index,
+        help="Select your role.",
+        disabled=pre_authorized  # Lock if pre-authorized
     )
     
     # Player Bio Form (shown when Player is selected)
@@ -77,7 +144,6 @@ with st.form("signup_form"):
                 player_data['batting_hand'] = st.selectbox("Batting Hand", options=[None, "Right", "Left", "Switch"], index=0)
                 player_data['throwing_hand'] = st.selectbox("Throwing Hand", options=[None, "Right", "Left"], index=0)
     
-    # Coach Bio Form (shown when Coach is selected)
     elif account_type == "Coach":
         with st.expander("🧢 Quick Coach Info (Optional)", expanded=True):
             st.caption("Just the basics - you can add more details to your profile later.")
@@ -104,47 +170,17 @@ with st.form("signup_form"):
                     index=0
                 )
     
+    elif account_type == "Organization Admin":
+        st.info("🏢 As an Organization Admin, you'll be able to manage teams, players, and coaches for your organization.")
+    
     st.divider()
     
-    st.subheader("Organization (Optional)")
-    
-    # Initialize variables
-    pre_authorized = False
-    assigned_role = 'player'  # Default role for non-authorized signups
-    auth_record_id = None
-    org_dict = {}
-    selected_org_id = None
-    
-    # Check if user is pre-authorized (only if email is entered)
-    if email:
-        authorized_record = supabase.check_user_authorized_any_org(email)
-        
-        if authorized_record:
-            # User is pre-authorized - automatically assign their organization
-            auth_org = supabase.get_organization(authorized_record['organization_id'])
-            
-            st.success(f"✅ You are pre-authorized to join **{auth_org['name']}**")
-            st.info(f"📋 Your assigned role will be: **{authorized_record['assigned_role']}**")
-            
-            if authorized_record.get('authorization_note'):
-                st.info(f"📝 Note: {authorized_record['authorization_note']}")
-            
-            # Store for later use
-            selected_org_id = auth_org['id']
-            pre_authorized = True
-            assigned_role = authorized_record['assigned_role']
-            auth_record_id = authorized_record['id']
-        else:
-            # User NOT pre-authorized - allow signup without organization
-            st.info("""
-            💡 **No pre-authorization found**
-            
-            You can create an account now and join an organization later when invited by an administrator.
-            """)
-            selected_org_id = None
+    # Show organization assignment if pre-authorized
+    if pre_authorized and auth_org:
+        st.subheader("Organization Assignment")
+        st.success(f"✅ You will be added to: **{auth_org.get('name', 'Unknown')}**")
     else:
-        # Email not entered yet
-        st.info("👆 Enter your email address above. If you're pre-authorized, your organization will be automatically assigned.")
+        st.caption("💡 You can be added to an organization later by an administrator.")
     
     st.divider()
     
@@ -198,9 +234,16 @@ with st.form("signup_form"):
                 if existing_user:
                     st.error("❌ An account with this email already exists. Please login instead.")
                 else:
-                    # Determine role based on account type (if not pre-authorized)
-                    if not pre_authorized:
-                        assigned_role = 'player' if account_type == "Player" else 'coach'
+                    # Determine role based on account type or pre-authorization
+                    if pre_authorized:
+                        # Use the role from authorization record
+                        final_role = assigned_role
+                    elif account_type == "Organization Admin":
+                        final_role = 'admin-org'
+                    elif account_type == "Coach":
+                        final_role = 'coach'
+                    else:
+                        final_role = 'player'
                     
                     # Create the user (with or without organization)
                     new_user = password_auth.create_user_with_password(
@@ -208,7 +251,7 @@ with st.form("signup_form"):
                         password=password,
                         full_name=full_name,
                         organization_id=selected_org_id,  # Can be None
-                        role=assigned_role
+                        role=final_role
                     )
                     
                     if new_user:
@@ -315,11 +358,24 @@ with st.form("signup_form"):
                                 profile_created = False
                                 st.warning(f"⚠️ Account created but coach profile could not be saved: {str(e)}")
                         
+                        # Organization Admin - no profile needed, just show success
+                        elif account_type == "Organization Admin":
+                            profile_created = True
+                        
                         st.success("✅ Account created successfully!")
                         
-                        if pre_authorized:
-                            if assigned_role != 'player':
-                                st.success(f"🎉 You have been assigned the '{assigned_role}' role!")
+                        # Show role and organization info
+                        role_display = {
+                            'admin-org': 'Organization Administrator',
+                            'admin': 'Team Admin',
+                            'coach': 'Coach',
+                            'player': 'Player'
+                        }.get(final_role, final_role)
+                        
+                        if final_role != 'player':
+                            st.success(f"🎉 You have been assigned the **{role_display}** role!")
+                        
+                        if pre_authorized and selected_org_id:
                             st.info(f"🏢 You have been added to the organization.")
                         
                         st.balloons()
@@ -331,12 +387,12 @@ with st.form("signup_form"):
                         if login_success:
                             st.success("🎉 You're now logged in! Redirecting to dashboard...")
                             time.sleep(1)
-                            st.switch_page("baseball-team-app.py")
+                            st.rerun()
                         else:
                             # Fallback - redirect to login page
                             st.info("💡 Please log in with your new credentials.")
                             time.sleep(2)
-                            st.switch_page("pages/login.py")
+                            st.rerun()
                     else:
                         st.error("❌ Failed to create account. Please try again or contact support.")
 

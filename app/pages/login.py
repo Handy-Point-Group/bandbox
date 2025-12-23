@@ -17,7 +17,7 @@ if auth.check_authentication():
     st.success("✅ You're already logged in!")
     st.info("Redirecting to main app...")
     if st.button("Go to Dashboard"):
-        st.switch_page("baseball-team-app.py")
+        st.rerun()
     st.stop()
 
 #%% Main Content

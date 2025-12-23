@@ -11,6 +11,10 @@ for p in pathlib.Path(".").rglob("__pycache__"):
 
 #%% page definitions
 
+# Auth pages (login/signup)
+login_page = st.Page("pages/login.py", title="Login", icon=":material/login:")
+signup_page = st.Page("pages/signup.py", title="Sign Up", icon=":material/person_add:")
+
 # Main team pages (require organization)
 roster = st.Page("pages/roster-page.py",title="Home",icon=":material/light_mode:")
 team_leaderboards = st.Page("pages/team-leaderboards.py",title="Leaderboards",icon=":material/social_leaderboard:")
@@ -18,9 +22,13 @@ player_page = st.Page("pages/player-page.py",title="Player Summary",icon=":mater
 plate_discipline_tracking = st.Page("pages/plate-discipline-tracking.py",title="Plate Discipline Tracking",icon=":material/background_dot_small:")
 data_input = st.Page("pages/data-input.py",title="Data Upload",icon=":material/upload:")
 
+# Coach pages
+coach_dashboard = st.Page("pages/coach-dashboard.py",title="My Teams",icon=":material/sports_baseball:")
+
 # Admin pages
 admin_user_management = st.Page("pages/admin-user-management.py",title="User Management",icon=":material/admin_panel_settings:")
 authorized_users = st.Page("pages/authorized-users.py",title="Authorized Users",icon=":material/verified_user:")
+org_admin_dashboard = st.Page("pages/org-admin-dashboard.py",title="Org Dashboard",icon=":material/dashboard:")
 superadmin_organizations = st.Page("pages/superadmin-organizations.py",title="Organizations",icon=":material/business:")
 
 #%% Run the App
@@ -46,41 +54,9 @@ if not auth.check_authentication():
         unsafe_allow_html=True
     )
     
-    # Show clean login/signup screen - NO SIDEBAR, NO LOGO, NO NAVIGATION
-    
-    # Center the content
-    col1, col2, col3 = st.columns([1, 2, 1])
-    
-    with col2:
-        st.markdown("<h1 style='text-align: center;'>⚾ Welcome to BandBox</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; font-size: 1.2em;'>Track Your Baseball Performance</p>", unsafe_allow_html=True)
-        st.markdown("---")
-        
-        st.markdown("### 🔐 Access Your Account")
-        
-        if st.button("🔐 Login to Existing Account", use_container_width=True, type="primary"):
-            st.switch_page("pages/login.py")
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        if st.button("📝 Create New Account", use_container_width=True):
-            st.switch_page("pages/signup.py")
-        
-        st.markdown("---")
-        
-        with st.expander("ℹ️ About BandBox"):
-            st.markdown("""
-            **BandBox** is a comprehensive baseball performance tracking platform that helps:
-            
-            - 📊 Track player statistics and performance
-            - ⚾ Analyze hitting and pitching data
-            - 📈 View team leaderboards
-            - 🎯 Monitor plate discipline
-            - 📁 Upload and manage data
-            
-            Get started by creating an account or logging in above!
-            """)
-    
+    # Use navigation with auth pages (login as default)
+    auth_nav = st.navigation([login_page, signup_page], position="hidden")
+    auth_nav.run()
     st.stop()
 
 # Only show logo and navigation AFTER authentication
@@ -97,6 +73,9 @@ user_role = current_user.get('role', 'player') if current_user else 'player'
 # Build navigation based on organization and role
 pages = []
 
+# Debug: Show current role in sidebar (uncomment to debug)
+st.sidebar.caption(f"🔑 Role: {user_role}")
+
 # If user has an organization, show team pages
 if current_org:
     pages = [
@@ -107,14 +86,19 @@ if current_org:
         plate_discipline_tracking
     ]
 
+# Add coach dashboard for coaches (check role directly too)
+if user_role in ['coach', 'admin', 'admin-org', 'admin-team', 'superadmin'] or auth.has_role('coach'):
+    pages.append(coach_dashboard)
+
 # Add admin pages based on role
-if auth.has_role('team_admin'):
+if user_role in ['admin', 'admin-team', 'admin-org', 'superadmin'] or auth.has_role('team_admin'):
     pages.append(admin_user_management)
 
-if auth.has_role('admin-org'):
+if user_role in ['admin-org', 'superadmin'] or auth.has_role('admin-org'):
+    pages.append(org_admin_dashboard)
     pages.append(authorized_users)
 
-if auth.has_role('superadmin'):
+if user_role == 'superadmin' or auth.has_role('superadmin'):
     pages.append(superadmin_organizations)
 
 # If user has no pages (no org and not admin), show a welcome page
