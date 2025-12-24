@@ -46,8 +46,11 @@ class AuthManager:
         Returns:
             True if authenticated and validated, False otherwise
         """
+        # Ensure session state is initialized
+        self._initialize_session_state()
+        
         # First check if already authenticated in session (password-based auth)
-        if st.session_state.authenticated and st.session_state.user_data:
+        if st.session_state.get('authenticated', False) and st.session_state.get('user_data'):
             return True
         
         # Try to check Google OIDC authentication
@@ -212,7 +215,8 @@ class AuthManager:
         Returns:
             User data dictionary or None
         """
-        return st.session_state.user_data if st.session_state.authenticated else None
+        self._initialize_session_state()
+        return st.session_state.get('user_data') if st.session_state.get('authenticated', False) else None
     
     def get_current_organization(self) -> Optional[Dict[str, Any]]:
         """
@@ -221,15 +225,16 @@ class AuthManager:
         Returns:
             Organization data dictionary or None
         """
-        if not st.session_state.authenticated:
+        self._initialize_session_state()
+        if not st.session_state.get('authenticated', False):
             return None
         
         # If user has selected a different org, load that one
-        if st.session_state.selected_organization_id:
+        if st.session_state.get('selected_organization_id'):
             return self.supabase.get_organization(st.session_state.selected_organization_id)
         
         # Otherwise return the primary org
-        return st.session_state.organization_data
+        return st.session_state.get('organization_data')
     
     def get_user_organizations(self) -> List[Dict[str, Any]]:
         """
@@ -238,10 +243,11 @@ class AuthManager:
         Returns:
             List of organization dictionaries
         """
-        if not st.session_state.authenticated or not st.session_state.user_data:
+        self._initialize_session_state()
+        if not st.session_state.get('authenticated', False) or not st.session_state.get('user_data'):
             return []
         
-        user = st.session_state.user_data
+        user = st.session_state.get('user_data')
         orgs = []
         
         # Add primary organization
@@ -269,7 +275,8 @@ class AuthManager:
         Args:
             organization_id: UUID of organization to switch to
         """
-        user = st.session_state.user_data
+        self._initialize_session_state()
+        user = st.session_state.get('user_data')
         if not user:
             return
         
@@ -293,10 +300,11 @@ class AuthManager:
         Returns:
             True if user has role, False otherwise
         """
-        if not st.session_state.authenticated or not st.session_state.user_data:
+        self._initialize_session_state()
+        if not st.session_state.get('authenticated', False) or not st.session_state.get('user_data'):
             return False
         
-        user_role = st.session_state.user_data.get('role', 'player')
+        user_role = st.session_state.get('user_data', {}).get('role', 'player')
         
         # Role hierarchy: superadmin > admin-org > admin-team > admin > coach > player > user
         role_hierarchy = {
@@ -327,14 +335,15 @@ class AuthManager:
         Returns:
             True if user has permission, False otherwise
         """
-        if not st.session_state.authenticated:
+        self._initialize_session_state()
+        if not st.session_state.get('authenticated', False):
             return False
         
         # Admins have all permissions
         if self.has_role('admin'):
             return True
         
-        return permission in st.session_state.permissions
+        return permission in st.session_state.get('permissions', [])
     
     def require_role(self, required_role: str):
         """
@@ -373,8 +382,9 @@ class AuthManager:
     
     def display_user_info(self):
         """Display current user information in sidebar with organization switcher"""
-        if st.session_state.authenticated and st.session_state.user_data:
-            user = st.session_state.user_data
+        self._initialize_session_state()
+        if st.session_state.get('authenticated', False) and st.session_state.get('user_data'):
+            user = st.session_state.get('user_data')
             current_org = self.get_current_organization()
             
             with st.sidebar:

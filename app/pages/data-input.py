@@ -10,7 +10,7 @@ import os
 from st_supabase_connection import SupabaseConnection
 import sys
 sys.path.append('..')
-from utils import get_auth_manager, get_supabase_client
+from utils import get_auth_manager, get_supabase_client, get_active_organization, get_active_team
 
 #%% Authentication Check
 auth = get_auth_manager()
@@ -21,11 +21,18 @@ if not auth.check_authentication():
     st.stop()
 
 current_user = auth.get_current_user()
-current_org = auth.get_current_organization()
+
+# Get active org from switcher, fall back to auth
+current_org = get_active_organization() or auth.get_current_organization()
+active_team = get_active_team()
 
 # Users can upload data with or without an organization
 if not current_org:
     st.info("📊 You can upload your personal training data even without an organization.")
+
+# Show active team context if selected
+if active_team:
+    st.sidebar.success(f"📍 Viewing: {active_team.get('name', 'Team')}")
 
 #%% Connect to Supabase
 db = st.connection("supabase",type=SupabaseConnection)
