@@ -48,6 +48,16 @@ with st.form("signup_form"):
         password = st.text_input("Password *", type="password", placeholder="Min. 8 characters")
         confirm_password = st.text_input("Confirm Password *", type="password")
     
+    # Password requirements
+    with st.expander("Password Requirements"):
+        st.markdown("""
+        Your password must:
+        - Be at least 8 characters long
+        - Contain at least one uppercase letter (A-Z)
+        - Contain at least one lowercase letter (a-z)
+        - Contain at least one number (0-9)
+        """)
+    
     st.divider()
     
     st.subheader("Organization (Optional)")
@@ -67,11 +77,11 @@ with st.form("signup_form"):
             # User is pre-authorized - automatically assign their organization
             auth_org = supabase.get_organization(authorized_record['organization_id'])
             
-            st.success(f"✅ You are pre-authorized to join **{auth_org['name']}**")
-            st.info(f"📋 Your assigned role will be: **{authorized_record['assigned_role']}**")
+            st.success(f"You are pre-authorized to join **{auth_org['name']}**")
+            st.info(f"Your assigned role will be: **{authorized_record['assigned_role']}**")
             
             if authorized_record.get('authorization_note'):
-                st.info(f"📝 Note: {authorized_record['authorization_note']}")
+                st.info(f"Note: {authorized_record['authorization_note']}")
             
             # Store for later use
             selected_org_id = auth_org['id']
@@ -80,25 +90,21 @@ with st.form("signup_form"):
             auth_record_id = authorized_record['id']
         else:
             # User NOT pre-authorized - allow signup without organization
-            st.info("""
-            💡 **No pre-authorization found**
-            
-            You can create an account now and join an organization later when invited by an administrator.
-            """)
+            st.info("**No pre-authorization found**")
             selected_org_id = None
     else:
         # Email not entered yet
-        st.info("👆 Enter your email address above. If you're pre-authorized, your organization will be automatically assigned.")
+        st.info("Enter your email address above. If you're pre-authorized, your organization will be automatically assigned.")
     
     st.divider()
     
-    st.subheader("⚾ Player/Coach Profile (Optional)")
+    st.subheader("Player/Coach Profile (Optional)")
     
     col_info1, col_info2 = st.columns([3, 1])
     with col_info1:
-        st.caption("📝 Complete your profile now to get started faster, or skip and add it later")
+        st.caption("Complete your profile now to get started faster, or skip and add it later")
     with col_info2:
-        st.caption("✨ **Recommended**")
+        st.caption("**Recommended**")
     
     # Initialize player profile variables
     player_role = "Select"
@@ -113,7 +119,7 @@ with st.form("signup_form"):
     college_interest = "Select"
     goals = ""
     
-    with st.expander("➕ Add Player Profile Information", expanded=False):
+    with st.expander("Add Player Profile Information", expanded=False):
         st.markdown("**This is optional but recommended for players and coaches**")
         
         # Basic player info
@@ -214,16 +220,6 @@ with st.form("signup_form"):
     
     st.divider()
     
-    # Password requirements
-    with st.expander("📋 Password Requirements"):
-        st.markdown("""
-        Your password must:
-        - Be at least 8 characters long
-        - Contain at least one uppercase letter (A-Z)
-        - Contain at least one lowercase letter (a-z)
-        - Contain at least one number (0-9)
-        """)
-    
     # Terms checkbox
     agree_terms = st.checkbox("I agree to the Terms of Service and Privacy Policy")
     
@@ -235,22 +231,22 @@ with st.form("signup_form"):
         errors = []
         
         if not full_name or not email or not password or not confirm_password:
-            errors.append("❌ All fields are required")
+            errors.append("All fields are required")
         
         if password != confirm_password:
-            errors.append("❌ Passwords do not match")
+            errors.append("Passwords do not match")
         
         # Validate password strength
         is_valid, password_error = password_auth.validate_password_strength(password)
         if not is_valid:
-            errors.append(f"❌ {password_error}")
+            errors.append(f"{password_error}")
         
         # Check email format
         if email and '@' not in email:
-            errors.append("❌ Invalid email format")
+            errors.append("Invalid email format")
         
         if not agree_terms:
-            errors.append("❌ You must agree to the Terms of Service")
+            errors.append("You must agree to the Terms of Service")
         
         # Display errors or create account
         if errors:
@@ -262,7 +258,7 @@ with st.form("signup_form"):
                 existing_user = supabase.get_user_by_email(email)
                 
                 if existing_user:
-                    st.error("❌ An account with this email already exists. Please login instead.")
+                    st.error("An account with this email already exists. Please login instead.")
                 else:
                     # Create the user (with or without organization)
                     new_user = password_auth.create_user_with_password(
@@ -331,34 +327,32 @@ with st.form("signup_form"):
                                         player_profile_created = True
                             except Exception as e:
                                 # Don't fail signup if player profile creation fails
-                                st.warning(f"⚠️ Account created but player profile failed: {e}")
+                                st.warning(f"Account created but player profile failed: {e}")
                         
-                        st.success("✅ Account created successfully!")
+                        st.success("Account created successfully!")
                         
                         if player_profile_created:
-                            st.success("🎉 Player profile created too!")
+                            st.success("Player profile created too!")
                         
                         if pre_authorized:
                             if assigned_role != 'player':
-                                st.success(f"🎉 You have been assigned the '{assigned_role}' role!")
-                                st.info(f"🏢 You have been added to the organization.")
-                        else:
-                            st.info("💡 You can join an organization when invited by an administrator.")
+                                st.success(f"You have been assigned the '{assigned_role}' role!")
+                                st.info(f"You have been added to the organization.")
                         
                         if player_profile_created:
-                            st.info("✨ Your player profile is ready! You can view and update it anytime.")
+                            st.info("Your player profile is ready! You can view and update it anytime.")
                         elif player_role == "Player":
-                            st.info("💡 You can complete your player profile after logging in.")
+                            st.info("You can complete your player profile after logging in.")
                         
                         st.balloons()
-                        st.info("🎉 Redirecting to login page...")
+                        st.info("Redirecting to login page...")
                         
                         # Auto-redirect to login page
                         import time
                         time.sleep(2)  # Give user time to see the success message
                         st.switch_page("pages/login.py")
                     else:
-                        st.error("❌ Failed to create account. Please try again or contact support.")
+                        st.error("Failed to create account. Please try again or contact support.")
 
 #%% Footer
 
