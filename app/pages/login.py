@@ -67,8 +67,9 @@ with st.form("email_login_form"):
                     **Possible reasons:**
                     - Incorrect email or password
                     - Account is not active
-                    - Organization is inactive
+                    - Organization is inactive (if you're assigned to one)
                     
+                    Note: You can login even without being assigned to an organization.
                     Contact your team administrator if you need help.
                     """)
 
@@ -101,10 +102,14 @@ with st.expander("ℹ️ Need Help?"):
     
     2. **Account not found?**
        - Make sure you're registered in the system
-       - Contact your team administrator to create an account
+       - You can create a new account by clicking "Create New Account" above
     
-    3. **Organization inactive?**
-       - Contact your organization administrator
+    3. **Don't have an organization?**
+       - No problem! You can login and use your account without being assigned to an organization
+       - You'll be able to join an organization later when invited by an administrator
+    
+    4. **Organization inactive?**
+       - If you're assigned to an organization and it's inactive, contact your organization administrator
     
     **For technical support, contact:** support@bandbox.com
     """)

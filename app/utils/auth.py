@@ -109,7 +109,8 @@ class AuthManager:
             if user.get('primary_organization_id'):
                 org_data = self.supabase.get_organization(user['primary_organization_id'])
                 
-                # Check if organization is active
+                # Check if organization is active (only if user is assigned to one)
+                # Users without organizations can still login
                 if org_data and not org_data.get('is_active', False):
                     logger.warning(f"Organization is inactive for user: {email}")
                     st.session_state.authenticated = False
@@ -171,7 +172,7 @@ class AuthManager:
         if not user:
             return False
         
-        # Load organization data
+        # Load organization data (optional - users can login without an organization)
         org_data = None
         if user.get('primary_organization_id'):
             org_data = self.supabase.get_organization(user['primary_organization_id'])

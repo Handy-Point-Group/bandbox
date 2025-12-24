@@ -28,16 +28,8 @@ if not auth.check_authentication():
 current_user = auth.get_current_user()
 current_org = auth.get_current_organization()
 
-# Check if user has an organization
-if not current_org:
-    st.warning("⚠️ You are not currently part of an organization.")
-    st.info("""
-    **To access this page:**
-    - Contact your team/organization administrator
-    - Ask them to invite you to their organization
-    - Once invited, you'll have access to team data
-    """)
-    st.stop()
+# Users can access this page with or without an organization
+# If no organization, they'll only see their own data
 
 #%% Connect to Supabase
 db = st.connection("supabase",type=SupabaseConnection)
@@ -126,20 +118,65 @@ player_options = players_show['full_name'].to_dict()
 
 st.title('Player Summary Page')
 
-playerselectcol, dateselectcol = st.columns(2, gap="medium", border=True)
+# Determine player selection based on organization status
+if not current_org:
+    # User without organization - show only their own data
+    st.info("👤 Viewing your personal player profile")
+    
+    # Try to find player record linked to user
+    # Check if players table has 'user_id' field to link to users table
+    user_id = current_user.get('id')
+    
+    if 'user_id' in players_show.columns:
+        # Link via user_id (preferred method)
+        user_linked_players = players_show[players_show['user_id'] == user_id]
+    elif 'email' in players_show.columns:
+        # Fallback: link via email
+        user_email = current_user.get('email')
+        user_linked_players = players_show[players_show['email'] == user_email]
+    else:
+        # No linking field available - try matching by name
+        user_full_name = current_user.get('full_name', '')
+        user_linked_players = players_show[players_show.get('full_name', pd.Series()) == user_full_name]
+    
+    if len(user_linked_players) == 0:
+        st.warning("⚠️ You don't have a player profile yet.")
+        st.info("""
+        **Create your player profile to:**
+        - 📊 Track your training data and stats
+        - 🎯 Set and monitor your baseball goals
+        - 📈 View your performance analytics
+        - 🏢 Join organizations when invited
+        """)
+        
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            if st.button("🎉 Create Your Player Profile", use_container_width=True, type="primary"):
+                st.switch_page("pages/player-onboarding.py")
+        
+        st.stop()
+    
+    player_select = user_linked_players.index[0]
+    
+    # Show date selector only (no player dropdown)
+    dateselectcol = st.container()
+else:
+    # User with organization - show player selector
+    playerselectcol, dateselectcol = st.columns(2, gap="medium", border=True)
 
-with playerselectcol:
+    with playerselectcol:
 
-    active_players = players_show[players_show['active'] == True]
+        active_players = players_show[players_show['active'] == True]
 
-    player_options = dict(zip(active_players.index, active_players['full_name']))
+        player_options = dict(zip(active_players.index, active_players['full_name']))
 
-    player_select = st.selectbox(
-        "Player",
-        options=list(player_options.keys()),
-        format_func=lambda id: player_options[id]
-    )
+        player_select = st.selectbox(
+            "Player",
+            options=list(player_options.keys()),
+            format_func=lambda id: player_options[id]
+        )
 
+# Date selection (works for both with and without organization)
 with dateselectcol:
 
     players_reset = players_show.reset_index()

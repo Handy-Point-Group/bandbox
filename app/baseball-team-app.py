@@ -11,12 +11,15 @@ for p in pathlib.Path(".").rglob("__pycache__"):
 
 #%% page definitions
 
+# Personal pages (available to all users)
+player_onboarding = st.Page("pages/player-onboarding.py",title="Player Profile",icon=":material/person:")
+player_page = st.Page("pages/player-page.py",title="Player Summary",icon=":material/bar_chart:")
+data_input = st.Page("pages/data-input.py",title="Data Upload",icon=":material/upload:")
+
 # Main team pages (require organization)
 roster = st.Page("pages/roster-page.py",title="Home",icon=":material/light_mode:")
 team_leaderboards = st.Page("pages/team-leaderboards.py",title="Leaderboards",icon=":material/social_leaderboard:")
-player_page = st.Page("pages/player-page.py",title="Player Summary",icon=":material/bar_chart:")
 plate_discipline_tracking = st.Page("pages/plate-discipline-tracking.py",title="Plate Discipline Tracking",icon=":material/background_dot_small:")
-data_input = st.Page("pages/data-input.py",title="Data Upload",icon=":material/upload:")
 
 # Admin pages
 admin_user_management = st.Page("pages/admin-user-management.py",title="User Management",icon=":material/admin_panel_settings:")
@@ -97,6 +100,9 @@ user_role = current_user.get('role', 'player') if current_user else 'player'
 # Build navigation based on organization and role
 pages = []
 
+# Personal pages available to ALL users (with or without organization)
+personal_pages = [player_onboarding, player_page, data_input]
+
 # If user has an organization, show team pages
 if current_org:
     pages = [
@@ -104,8 +110,12 @@ if current_org:
         team_leaderboards,
         player_page,
         data_input,
-        plate_discipline_tracking
+        plate_discipline_tracking,
+        player_onboarding  # Add at the end for users with org
     ]
+else:
+    # User without organization - show only personal pages
+    pages = personal_pages
 
 # Add admin pages based on role
 if auth.has_role('team_admin'):
@@ -117,22 +127,28 @@ if auth.has_role('admin-org'):
 if auth.has_role('superadmin'):
     pages.append(superadmin_organizations)
 
-# If user has no pages (no org and not admin), show a welcome page
+# Check if we still need to show welcome page (shouldn't happen now as we have personal pages)
 if not pages:
     st.title("👋 Welcome to BandBox!")
     st.markdown("---")
     
-    st.info("""
+    st.success("""
     ### 🎉 Your account has been created successfully!
-    
-    **Next Steps:**
-    
-    1. **Wait for an invitation** - Your organization administrator will invite you to join their team
-    2. **Check your email** - You may receive a notification when you're added to an organization
-    3. **Contact your administrator** - If you're not sure who to contact, reach out to your team coach or manager
-    
-    Once you're added to an organization, you'll see team pages appear in the navigation menu.
     """)
+    
+    st.info("""
+    **Get started by creating your player profile:**
+    
+    📋 Add your baseball information (positions, stats, etc.)
+    🎯 Set your goals and track your progress
+    📊 Upload your training data
+    🏢 Join organizations when invited by coaches
+    """)
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button("🎉 Create Your Player Profile Now", use_container_width=True, type="primary"):
+            st.switch_page("pages/player-onboarding.py")
     
     st.markdown("---")
     
@@ -149,6 +165,7 @@ if not pages:
         st.markdown("#### 🏢 Organization Status")
         st.write("**Organization:** Not assigned yet")
         st.write("**Status:** ⏳ Waiting for invitation")
+        st.caption("You can still use BandBox! Create your player profile to get started.")
     
     st.stop()
 

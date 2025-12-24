@@ -23,10 +23,9 @@ if not auth.check_authentication():
 current_user = auth.get_current_user()
 current_org = auth.get_current_organization()
 
+# Users can upload data with or without an organization
 if not current_org:
-    st.warning("⚠️ You are not currently part of an organization.")
-    st.info("Contact your team administrator to be invited to an organization.")
-    st.stop()
+    st.info("📊 You can upload your personal training data even without an organization.")
 
 #%% Connect to Supabase
 db = st.connection("supabase",type=SupabaseConnection)

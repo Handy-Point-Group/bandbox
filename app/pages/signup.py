@@ -79,6 +79,128 @@ with st.form("signup_form"):
     
     st.divider()
     
+    st.subheader("⚾ Player/Coach Profile (Optional)")
+    
+    col_info1, col_info2 = st.columns([3, 1])
+    with col_info1:
+        st.caption("📝 Complete your profile now to get started faster, or skip and add it later")
+    with col_info2:
+        st.caption("✨ **Recommended**")
+    
+    # Initialize player profile variables
+    player_role = "Select"
+    grad_year = None
+    batting_hand = "Select"
+    throwing_hand = "Select"
+    pitcher = False
+    primary_position = "Select Position"
+    current_team = ""
+    travel_team = ""
+    years_playing = 0
+    college_interest = "Select"
+    goals = ""
+    
+    with st.expander("➕ Add Player Profile Information", expanded=False):
+        st.markdown("**This is optional but recommended for players and coaches**")
+        
+        # Basic player info
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            player_role = st.selectbox(
+                "I am a:",
+                options=["Select", "Player", "Coach", "Parent/Guardian", "Other"],
+                help="This helps us customize your experience",
+                key="player_role_select"
+            )
+        
+        # Show player-specific fields if role is Player
+        if player_role == "Player":
+            # Calculate default graduation year
+            from datetime import datetime
+            current_year = datetime.now().year
+            default_grad_year = current_year + 4
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                grad_year = st.number_input(
+                    "High School Graduation Year",
+                    min_value=current_year - 10,
+                    max_value=current_year + 10,
+                    value=default_grad_year,
+                    step=1
+                )
+                
+                batting_hand = st.selectbox(
+                    "Batting Hand",
+                    options=["Select", "Right", "Left", "Switch"]
+                )
+                
+                pitcher = st.checkbox("I am a Pitcher")
+            
+            with col2:
+                throwing_hand = st.selectbox(
+                    "Throwing Hand",
+                    options=["Select", "Right", "Left"]
+                )
+                
+                position_options = [
+                    "Select Position",
+                    "Catcher (C)",
+                    "First Base (1B)",
+                    "Second Base (2B)",
+                    "Third Base (3B)",
+                    "Shortstop (SS)",
+                    "Left Field (LF)",
+                    "Center Field (CF)",
+                    "Right Field (RF)",
+                    "Designated Hitter (DH)",
+                    "Pitcher (P)"
+                ]
+                
+                primary_position = st.selectbox(
+                    "Primary Position",
+                    options=position_options
+                )
+            
+            st.markdown("**Additional Information**")
+            
+            col3, col4 = st.columns(2)
+            
+            with col3:
+                current_team = st.text_input(
+                    "Current Team/School",
+                    placeholder="e.g., Lincoln High School"
+                )
+                
+                years_playing = st.number_input(
+                    "Years Playing Baseball",
+                    min_value=0,
+                    max_value=20,
+                    value=0,
+                    step=1
+                )
+            
+            with col4:
+                travel_team = st.text_input(
+                    "Travel/Club Team (if any)",
+                    placeholder="e.g., Elite Baseball 16U"
+                )
+                
+                college_interest = st.selectbox(
+                    "College Baseball Interest",
+                    options=["Select", "Division I", "Division II", "Division III", "NAIA", "JUCO", "Not Interested", "Undecided"]
+                )
+            
+            goals = st.text_area(
+                "Your Baseball Goals (optional)",
+                placeholder="What are your goals for this season?",
+                height=80
+            )
+    
+    st.divider()
+    
     # Password requirements
     with st.expander("📋 Password Requirements"):
         st.markdown("""
@@ -143,14 +265,77 @@ with st.form("signup_form"):
                         if pre_authorized and auth_record_id and selected_org_id:
                             supabase.mark_authorized_user_signed_up(email, selected_org_id, new_user['id'])
                         
+                        # Create player profile if provided
+                        player_profile_created = False
+                        if player_role and player_role != "Select":
+                            try:
+                                # Only create player profile if role is "Player" and we have required info
+                                if player_role == "Player":
+                                    # Split full name for player profile
+                                    name_parts = full_name.split()
+                                    first_name = name_parts[0] if len(name_parts) > 0 else full_name
+                                    last_name = ' '.join(name_parts[1:]) if len(name_parts) > 1 else ''
+                                    
+                                    # Build survey data
+                                    survey_data = {}
+                                    if batting_hand and batting_hand != "Select":
+                                        survey_data['batting_hand'] = batting_hand
+                                    if throwing_hand and throwing_hand != "Select":
+                                        survey_data['throwing_hand'] = throwing_hand
+                                    if years_playing:
+                                        survey_data['years_playing'] = years_playing
+                                    if current_team:
+                                        survey_data['current_team'] = current_team
+                                    if travel_team:
+                                        survey_data['travel_team'] = travel_team
+                                    if college_interest and college_interest != "Select":
+                                        survey_data['college_interest'] = college_interest
+                                    if goals:
+                                        survey_data['goals'] = goals
+                                    
+                                    # Build player data
+                                    player_data = {
+                                        "user_id": new_user['id'],
+                                        "first_name": first_name,
+                                        "last_name": last_name,
+                                        "email": email,
+                                        "grad_year": int(grad_year) if player_role == "Player" else None,
+                                        "pitcher": pitcher if player_role == "Player" else False,
+                                        "pos_1": primary_position if primary_position != "Select Position" else None,
+                                        "metadata": {"survey": survey_data, "role": player_role}
+                                    }
+                                    
+                                    # Insert player profile
+                                    from datetime import datetime
+                                    player_data["created_at"] = datetime.now().isoformat()
+                                    player_data["updated_at"] = datetime.now().isoformat()
+                                    
+                                    from st_supabase_connection import SupabaseConnection
+                                    db = st.connection("supabase", type=SupabaseConnection)
+                                    response = db.client.table("players").insert(player_data).execute()
+                                    
+                                    if response.data:
+                                        player_profile_created = True
+                            except Exception as e:
+                                # Don't fail signup if player profile creation fails
+                                st.warning(f"⚠️ Account created but player profile failed: {e}")
+                        
                         st.success("✅ Account created successfully!")
+                        
+                        if player_profile_created:
+                            st.success("🎉 Player profile created too!")
                         
                         if pre_authorized:
                             if assigned_role != 'player':
                                 st.success(f"🎉 You have been assigned the '{assigned_role}' role!")
-                            st.info(f"🏢 You have been added to the organization.")
+                                st.info(f"🏢 You have been added to the organization.")
                         else:
                             st.info("💡 You can join an organization when invited by an administrator.")
+                        
+                        if player_profile_created:
+                            st.info("✨ Your player profile is ready! You can view and update it anytime.")
+                        elif player_role == "Player":
+                            st.info("💡 You can complete your player profile after logging in.")
                         
                         st.balloons()
                         st.info("🎉 Redirecting to login page...")
