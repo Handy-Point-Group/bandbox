@@ -10,7 +10,7 @@ from utils import get_auth_manager, get_supabase_client
 
 #%% Page Configuration
 
-st.set_page_config(page_title="Player Onboarding - BandBox", page_icon="⚾", layout="wide")
+st.set_page_config(page_title="Player Onboarding - Bandbox", page_icon=r"app/images/bandbox.png", layout="wide")
 
 #%% Authentication Check
 auth = get_auth_manager()
@@ -43,7 +43,7 @@ existing_profile = get_user_player_profile(current_user['id'])
 
 #%% Header
 
-st.title("⚾ Player Profile & Onboarding")
+st.title("Player Profile & Onboarding")
 
 if existing_profile:
     st.info("✅ You already have a player profile. You can update it below.")
@@ -320,31 +320,31 @@ with st.form("player_onboarding_form", clear_on_submit=False):
                         response = db.client.table("players").update(player_data).eq("id", existing_profile['id']).execute()
                         
                         if response.data:
-                            st.success("✅ Player profile updated successfully!")
+                            st.success("Player profile updated successfully!")
                             st.balloons()
                             st.info("Redirecting to your player page...")
                             import time
                             time.sleep(2)
                             st.switch_page("pages/player-page.py")
                         else:
-                            st.error("❌ Failed to update profile. Please try again.")
+                            st.error("Failed to update profile. Please try again.")
                     else:
                         # Create new profile
                         player_data["created_at"] = datetime.now().isoformat()
                         response = db.client.table("players").insert(player_data).execute()
                         
                         if response.data:
-                            st.success("✅ Player profile created successfully!")
+                            st.success("Player profile created successfully!")
                             st.balloons()
-                            st.info("🎉 Welcome to BandBox! Redirecting to your player page...")
+                            st.info("Welcome to Bandbox! Redirecting to your player page...")
                             import time
                             time.sleep(2)
                             st.switch_page("pages/player-page.py")
                         else:
-                            st.error("❌ Failed to create profile. Please try again.")
+                            st.error("Failed to create profile. Please try again.")
                 
                 except Exception as e:
-                    st.error(f"❌ Error saving profile: {e}")
+                    st.error(f"Error saving profile: {e}")
                     st.exception(e)
 
 #%% Footer
@@ -364,5 +364,5 @@ with st.expander("ℹ️ Why do we collect this information?"):
     **Privacy**: Your data is secure and only shared with organizations you join.
     """)
 
-st.caption("🔒 Your information is secure and encrypted")
+st.caption("Your information is secure and encrypted")
 

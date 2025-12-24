@@ -27,7 +27,24 @@ authorized_users = st.Page("pages/authorized-users.py",title="Authorized Users",
 superadmin_organizations = st.Page("pages/superadmin-organizations.py",title="Organizations",icon=":material/business:")
 
 #%% Run the App
-st.set_page_config(layout="wide")
+st.set_page_config(
+    page_title="Bandbox",
+    page_icon=r"app/images/bandbox.png",
+    layout="wide"
+)
+
+# Custom CSS for button styling
+st.markdown("""
+<style>
+    /* Make primary button text black instead of white */
+    .stButton > button[kind="primary"] {
+        color: black !important;
+    }
+    button[data-testid="baseButton-primary"] {
+        color: black !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # Initialize authentication
 auth = get_auth_manager()
@@ -55,31 +72,30 @@ if not auth.check_authentication():
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        st.markdown("<h1 style='text-align: center;'>⚾ Welcome to BandBox</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; font-size: 1.2em;'>Track Your Baseball Performance</p>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center;'>Welcome to Bandbox</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; font-size: 1.2em;'>Own Your Baseball Future</p>", unsafe_allow_html=True)
         st.markdown("---")
         
-        st.markdown("### 🔐 Access Your Account")
+        st.markdown("### Access Your Account")
         
-        if st.button("🔐 Login to Existing Account", use_container_width=True, type="primary"):
+        if st.button("Login to Existing Account", use_container_width=True, type="primary"):
             st.switch_page("pages/login.py")
         
         st.markdown("<br>", unsafe_allow_html=True)
         
-        if st.button("📝 Create New Account", use_container_width=True):
+        if st.button("Create New Account", use_container_width=True):
             st.switch_page("pages/signup.py")
         
         st.markdown("---")
         
-        with st.expander("ℹ️ About BandBox"):
+        with st.expander("About Bandbox"):
             st.markdown("""
-            **BandBox** is a comprehensive baseball performance tracking platform that helps:
+            **Bandbox** is a comprehensive baseball performance tracking platform that helps:
             
-            - 📊 Track player statistics and performance
-            - ⚾ Analyze hitting and pitching data
-            - 📈 View team leaderboards
-            - 🎯 Monitor plate discipline
-            - 📁 Upload and manage data
+            - Track your performance data
+            - Analyze hitting and pitching data
+            - Monitor plate discipline
+            - Upload and manage data
             
             Get started by creating an account or logging in above!
             """)
@@ -87,7 +103,7 @@ if not auth.check_authentication():
     st.stop()
 
 # Only show logo and navigation AFTER authentication
-st.logo(r'app/images/lighthouse 1.png', size='large')
+st.logo(r'app/images/bandbox.png', size='large')
 
 # Display user info in sidebar
 auth.display_user_info()
@@ -129,25 +145,25 @@ if auth.has_role('superadmin'):
 
 # Check if we still need to show welcome page (shouldn't happen now as we have personal pages)
 if not pages:
-    st.title("👋 Welcome to BandBox!")
+    st.title("Welcome to Bandbox!")
     st.markdown("---")
     
     st.success("""
-    ### 🎉 Your account has been created successfully!
+    ### Your account has been created successfully!
     """)
     
     st.info("""
     **Get started by creating your player profile:**
     
-    📋 Add your baseball information (positions, stats, etc.)
-    🎯 Set your goals and track your progress
-    📊 Upload your training data
-    🏢 Join organizations when invited by coaches
+    Add your baseball information (positions, stats, etc.)
+    Set your goals and track your progress
+    Upload your training data
+    Join organizations when invited by coaches
     """)
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("🎉 Create Your Player Profile Now", use_container_width=True, type="primary"):
+        if st.button("Create Your Player Profile Now", use_container_width=True, type="primary"):
             st.switch_page("pages/player-onboarding.py")
     
     st.markdown("---")
@@ -155,17 +171,17 @@ if not pages:
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("#### 📧 Your Account Info")
+        st.markdown("#### Your Account Info")
         if current_user:
             st.write(f"**Name:** {current_user.get('full_name', 'N/A')}")
             st.write(f"**Email:** {current_user.get('email', 'N/A')}")
             st.write(f"**Role:** {current_user.get('role', 'player').title()}")
     
     with col2:
-        st.markdown("#### 🏢 Organization Status")
+        st.markdown("#### Organization Status")
         st.write("**Organization:** Not assigned yet")
-        st.write("**Status:** ⏳ Waiting for invitation")
-        st.caption("You can still use BandBox! Create your player profile to get started.")
+        st.write("**Status:** Waiting for invitation")
+        st.caption("You can still use Bandbox! Create your player profile to get started.")
     
     st.stop()
 

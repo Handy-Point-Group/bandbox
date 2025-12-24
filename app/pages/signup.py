@@ -7,12 +7,25 @@ from utils import get_password_auth, get_supabase_client
 
 #%% Page Configuration
 
-st.set_page_config(page_title="Sign Up - BandBox", page_icon="⚾", layout="centered")
+st.set_page_config(page_title="Sign Up - Bandbox", page_icon=r"app/images/bandbox.png", layout="centered")
+
+# Custom CSS for button styling
+st.markdown("""
+<style>
+    /* Make primary button text black instead of white */
+    .stButton > button[kind="primary"] {
+        color: black !important;
+    }
+    button[data-testid="baseButton-primary"] {
+        color: black !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 #%% Main Content
 
-st.title("⚾ Create Your Account")
-st.markdown("Join BandBox to track your baseball performance")
+st.title("Create Your Account")
+st.markdown("Join Bandbox to own your baseball future")
 
 # Initialize services
 password_auth = get_password_auth()
@@ -356,5 +369,5 @@ if st.button("Login Here", use_container_width=True):
     st.switch_page("pages/login.py")
 
 st.markdown("---")
-st.caption("🔒 Your information is secure and encrypted")
+st.caption("Your information is secure and encrypted")
 
