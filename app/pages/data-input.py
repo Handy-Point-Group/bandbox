@@ -26,10 +26,9 @@ current_user = auth.get_current_user()
 current_org = get_active_organization() or auth.get_current_organization()
 active_team = get_active_team()
 
+# Users can upload data with or without an organization
 if not current_org:
-    st.warning("⚠️ You are not currently part of an organization.")
-    st.info("Contact your team administrator to be invited to an organization.")
-    st.stop()
+    st.info("📊 You can upload your personal training data even without an organization.")
 
 # Show active team context if selected
 if active_team:

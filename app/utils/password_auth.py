@@ -91,7 +91,8 @@ class PasswordAuth:
                 logger.warning(f"Invalid password for user: {email}")
                 return None
             
-            # Check organization
+            # Check organization (only if user is assigned to one)
+            # Users without organizations can still login
             if user.get('primary_organization_id'):
                 org = self.supabase.get_organization(user['primary_organization_id'])
                 if org and not org.get('is_active', False):
@@ -113,7 +114,7 @@ class PasswordAuth:
         email: str,
         password: str,
         full_name: str,
-        organization_id: str,
+        organization_id: Optional[str] = None,
         role: str = 'player'
     ) -> Optional[Dict[str, Any]]:
         """
@@ -123,7 +124,7 @@ class PasswordAuth:
             email: User's email
             password: Plain text password
             full_name: User's full name
-            organization_id: Organization UUID
+            organization_id: Organization UUID (optional, can be None for users without organizations)
             role: User's role
             
         Returns:

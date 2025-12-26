@@ -9,12 +9,25 @@ from utils import get_password_auth, get_supabase_client, get_auth_manager
 
 #%% Page Configuration
 
-st.set_page_config(page_title="Sign Up - BandBox", page_icon="⚾", layout="centered")
+st.set_page_config(page_title="Sign Up - Bandbox", page_icon=r"app/images/bandbox.png", layout="centered")
+
+# Custom CSS for button styling
+st.markdown("""
+<style>
+    /* Make primary button text black instead of white */
+    .stButton > button[kind="primary"] {
+        color: black !important;
+    }
+    button[data-testid="baseButton-primary"] {
+        color: black !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 #%% Main Content
 
-st.title("⚾ Create Your Account")
-st.markdown("Join BandBox to track your baseball performance")
+st.title("Create Your Account")
+st.markdown("Join Bandbox to own your baseball future")
 
 # Initialize services
 password_auth = get_password_auth()
@@ -81,6 +94,16 @@ with st.form("signup_form"):
     with col2:
         password = st.text_input("Password *", type="password", placeholder="Min. 8 characters")
         confirm_password = st.text_input("Confirm Password *", type="password")
+    
+    # Password requirements
+    with st.expander("Password Requirements"):
+        st.markdown("""
+        Your password must:
+        - Be at least 8 characters long
+        - Contain at least one uppercase letter (A-Z)
+        - Contain at least one lowercase letter (a-z)
+        - Contain at least one number (0-9)
+        """)
     
     st.divider()
     
@@ -184,15 +207,127 @@ with st.form("signup_form"):
     
     st.divider()
     
-    # Password requirements
-    with st.expander("📋 Password Requirements"):
-        st.markdown("""
-        Your password must:
-        - Be at least 8 characters long
-        - Contain at least one uppercase letter (A-Z)
-        - Contain at least one lowercase letter (a-z)
-        - Contain at least one number (0-9)
-        """)
+    st.subheader("Player/Coach Profile (Optional)")
+    
+    col_info1, col_info2 = st.columns([3, 1])
+    with col_info1:
+        st.caption("Complete your profile now to get started faster, or skip and add it later")
+    with col_info2:
+        st.caption("**Recommended**")
+    
+    # Initialize player profile variables
+    player_role = "Select"
+    grad_year = None
+    batting_hand = "Select"
+    throwing_hand = "Select"
+    pitcher = False
+    primary_position = "Select Position"
+    current_team = ""
+    travel_team = ""
+    years_playing = 0
+    college_interest = "Select"
+    goals = ""
+    
+    with st.expander("Add Player Profile Information", expanded=False):
+        st.markdown("**This is optional but recommended for players and coaches**")
+        
+        # Basic player info
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            player_role = st.selectbox(
+                "I am a:",
+                options=["Select", "Player", "Coach", "Parent/Guardian", "Other"],
+                help="This helps us customize your experience",
+                key="player_role_select"
+            )
+        
+        # Show player-specific fields if role is Player
+        if player_role == "Player":
+            # Calculate default graduation year
+            from datetime import datetime
+            current_year = datetime.now().year
+            default_grad_year = current_year + 4
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                grad_year = st.number_input(
+                    "High School Graduation Year",
+                    min_value=current_year - 10,
+                    max_value=current_year + 10,
+                    value=default_grad_year,
+                    step=1
+                )
+                
+                batting_hand = st.selectbox(
+                    "Batting Hand",
+                    options=["Select", "Right", "Left", "Switch"]
+                )
+                
+                pitcher = st.checkbox("I am a Pitcher")
+            
+            with col2:
+                throwing_hand = st.selectbox(
+                    "Throwing Hand",
+                    options=["Select", "Right", "Left"]
+                )
+                
+                position_options = [
+                    "Select Position",
+                    "Catcher (C)",
+                    "First Base (1B)",
+                    "Second Base (2B)",
+                    "Third Base (3B)",
+                    "Shortstop (SS)",
+                    "Left Field (LF)",
+                    "Center Field (CF)",
+                    "Right Field (RF)",
+                    "Designated Hitter (DH)",
+                    "Pitcher (P)"
+                ]
+                
+                primary_position = st.selectbox(
+                    "Primary Position",
+                    options=position_options
+                )
+            
+            st.markdown("**Additional Information**")
+            
+            col3, col4 = st.columns(2)
+            
+            with col3:
+                current_team = st.text_input(
+                    "Current Team/School",
+                    placeholder="e.g., Lincoln High School"
+                )
+                
+                years_playing = st.number_input(
+                    "Years Playing Baseball",
+                    min_value=0,
+                    max_value=20,
+                    value=0,
+                    step=1
+                )
+            
+            with col4:
+                travel_team = st.text_input(
+                    "Travel/Club Team (if any)",
+                    placeholder="e.g., Elite Baseball 16U"
+                )
+                
+                college_interest = st.selectbox(
+                    "College Baseball Interest",
+                    options=["Select", "Division I", "Division II", "Division III", "NAIA", "JUCO", "Not Interested", "Undecided"]
+                )
+            
+            goals = st.text_area(
+                "Your Baseball Goals (optional)",
+                placeholder="What are your goals for this season?",
+                height=80
+            )
+    
+    st.divider()
     
     # Terms checkbox
     agree_terms = st.checkbox("I agree to the Terms of Service and Privacy Policy")
@@ -205,22 +340,22 @@ with st.form("signup_form"):
         errors = []
         
         if not full_name or not email or not password or not confirm_password:
-            errors.append("❌ All fields are required")
+            errors.append("All fields are required")
         
         if password != confirm_password:
-            errors.append("❌ Passwords do not match")
+            errors.append("Passwords do not match")
         
         # Validate password strength
         is_valid, password_error = password_auth.validate_password_strength(password)
         if not is_valid:
-            errors.append(f"❌ {password_error}")
+            errors.append(f"{password_error}")
         
         # Check email format
         if email and '@' not in email:
-            errors.append("❌ Invalid email format")
+            errors.append("Invalid email format")
         
         if not agree_terms:
-            errors.append("❌ You must agree to the Terms of Service")
+            errors.append("You must agree to the Terms of Service")
         
         # Display errors or create account
         if errors:
@@ -232,7 +367,7 @@ with st.form("signup_form"):
                 existing_user = supabase.get_user_by_email(email)
                 
                 if existing_user:
-                    st.error("❌ An account with this email already exists. Please login instead.")
+                    st.error("An account with this email already exists. Please login instead.")
                 else:
                     # Determine role based on account type or pre-authorization
                     if pre_authorized:
@@ -394,7 +529,7 @@ with st.form("signup_form"):
                             time.sleep(2)
                             st.rerun()
                     else:
-                        st.error("❌ Failed to create account. Please try again or contact support.")
+                        st.error("Failed to create account. Please try again or contact support.")
 
 #%% Footer
 
@@ -405,5 +540,5 @@ if st.button("Login Here", use_container_width=True):
     st.switch_page("pages/login.py")
 
 st.markdown("---")
-st.caption("🔒 Your information is secure and encrypted")
+st.caption("Your information is secure and encrypted")
 

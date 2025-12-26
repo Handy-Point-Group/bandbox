@@ -7,17 +7,31 @@ from utils import get_auth_manager
 
 #%% Page Configuration
 
-st.set_page_config(page_title="Login - BandBox", page_icon="⚾", layout="centered")
+st.set_page_config(page_title="Login - Bandbox", page_icon=r"app/images/bandbox.png", layout="centered")
+
+# Custom CSS for button styling
+st.markdown("""
+<style>
+    /* Make primary button text black instead of white */
+    .stButton > button[kind="primary"] {
+        color: black !important;
+    }
+    /* Make yellow button text black */
+    button[data-testid="baseButton-primary"] {
+        color: black !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 #%% Check if already logged in
 
 auth = get_auth_manager()
 
 if auth.check_authentication():
-    st.success("✅ You're already logged in!")
+    st.success("You're already logged in!")
     st.info("Redirecting to main app...")
-    if st.button("Go to Dashboard"):
-        st.rerun()
+    if st.button("Go to Dashboard", type="primary"):
+        st.switch_page("baseball-team-app.py")
     st.stop()
 
 #%% Main Content
@@ -25,8 +39,8 @@ if auth.check_authentication():
 # Logo and title
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    st.title("⚾ BandBox Login")
-    st.markdown("**Track Your Baseball Performance**")
+    st.title("Bandbox Login")
+    st.markdown("**Own Your Baseball Future**")
 
 st.markdown("---")
 
@@ -51,24 +65,24 @@ with st.form("email_login_form"):
     
     if login_button:
         if not email or not password:
-            st.error("❌ Please enter both email and password")
+            st.error("Please enter both email and password")
         else:
             with st.spinner("Authenticating..."):
                 success = auth.login_with_password(email, password)
                 
                 if success:
-                    st.success("✅ Login successful!")
-                    st.balloons()
+                    st.success("Login successful!")
                     st.info("Redirecting to dashboard...")
                     st.rerun()
                 else:
-                    st.error("❌ Invalid email or password. Please try again.")
+                    st.error("Invalid email or password. Please try again.")
                     st.warning("""
                     **Possible reasons:**
                     - Incorrect email or password
                     - Account is not active
-                    - Organization is inactive
+                    - Organization is inactive (if you're assigned to one)
                     
+                    Note: You can login even without being assigned to an organization.
                     Contact your team administrator if you need help.
                     """)
 
@@ -81,7 +95,7 @@ st.markdown("### Don't have an account?")
 col1, col2 = st.columns(2)
 
 with col1:
-    if st.button("📝 Create New Account", use_container_width=True):
+    if st.button("Create New Account", use_container_width=True):
         st.switch_page("pages/signup.py")
 
 with col2:
@@ -92,7 +106,7 @@ with col2:
 
 st.markdown("---")
 
-with st.expander("ℹ️ Need Help?"):
+with st.expander("Need Help?"):
     st.markdown("""
     **Login Issues?**
     
@@ -101,13 +115,17 @@ with st.expander("ℹ️ Need Help?"):
     
     2. **Account not found?**
        - Make sure you're registered in the system
-       - Contact your team administrator to create an account
+       - You can create a new account by clicking "Create New Account" above
     
-    3. **Organization inactive?**
-       - Contact your organization administrator
+    3. **Don't have an organization?**
+       - No problem! You can login and use your account without being assigned to an organization
+       - You'll be able to join an organization later when invited by an administrator
+    
+    4. **Organization inactive?**
+       - If you're assigned to an organization and it's inactive, contact your organization administrator
     
     **For technical support, contact:** support@bandbox.com
     """)
 
-st.caption("🔒 Secure authentication powered by BandBox")
+st.caption("Secure authentication powered by Bandbox")
 
