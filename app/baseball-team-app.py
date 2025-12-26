@@ -21,7 +21,11 @@ for p in pathlib.Path(".").rglob("__pycache__"):
 # Auth pages (login/signup)
 login_page = st.Page("pages/login.py", title="Login", icon=":material/login:")
 signup_page = st.Page("pages/signup.py", title="Sign Up", icon=":material/person_add:")
+
+# Main player pages
 player_onboarding = st.Page("pages/player-onboarding.py", title="Player Form", icon=":material/waving_hand:")
+player_page = st.Page("pages/player-page.py",title="Player Summary",icon=":material/bar_chart:")
+data_input = st.Page("pages/data-input.py",title="Data Upload",icon=":material/upload:")
 
 # Main team pages (require organization)
 roster = st.Page("pages/roster-page.py",title="Home",icon=":material/light_mode:")
