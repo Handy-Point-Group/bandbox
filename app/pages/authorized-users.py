@@ -15,8 +15,8 @@ from utils import (
 #%% Page Configuration
 
 st.set_page_config(
-    page_title="Authorized Users",
-    page_icon="✅",
+    page_title="Bandbox - Authorized Users",
+    page_icon=r"app/images/bandbox.png",
     layout="wide"
 )
 
@@ -32,12 +32,12 @@ supabase = get_supabase_client()
 # Check authorization - must be superadmin or admin-org
 user_role = current_user.get('role', 'user')
 if user_role not in ['superadmin', 'admin-org', 'admin-team']:
-    st.error("🚫 Access Denied: This page is only accessible to administrators.")
+    st.error("Access Denied: This page is only accessible to administrators.")
     st.stop()
 
 #%% Page Title
 
-st.title("✅ Authorized Users Management")
+st.title("Authorized Users Management")
 st.markdown("Manage users who are pre-authorized to join organizations")
 st.markdown("---")
 
@@ -61,7 +61,7 @@ if not available_orgs:
 
 #%% Tabs
 
-tab1, tab2, tab3 = st.tabs(["➕ Authorize New User", "👥 Invite Existing User", "📋 View Authorized Users"])
+tab1, tab2, tab3 = st.tabs(["Authorize New User", "Invite Existing User", "View Authorized Users"])
 
 #%% Tab 1: Add Authorized User
 
@@ -124,7 +124,7 @@ with tab1:
             )
         
         submit_button = st.form_submit_button(
-            "✅ Add Authorized User",
+            "Add Authorized User",
             use_container_width=True,
             type="primary"
         )
@@ -132,17 +132,17 @@ with tab1:
         if submit_button:
             # Validation
             if not auth_email or '@' not in auth_email:
-                st.error("❌ Please enter a valid email address")
+                st.error("Please enter a valid email address")
             else:
                 # Check if user already exists
                 existing_user = supabase.get_user_by_email(auth_email)
                 if existing_user:
-                    st.error(f"❌ User with email {auth_email} already exists in the system")
+                    st.error(f"User with email {auth_email} already exists in the system")
                 else:
                     # Check if already authorized
                     existing_auth = supabase.check_user_authorized(auth_email, selected_org_id)
                     if existing_auth:
-                        st.error(f"❌ User {auth_email} is already authorized for this organization")
+                        st.error(f"User {auth_email} is already authorized for this organization")
                     else:
                         # Add authorized user
                         result = supabase.add_authorized_user(
@@ -155,12 +155,11 @@ with tab1:
                         )
                         
                         if result:
-                            st.success(f"✅ User {auth_email} has been authorized!")
-                            st.info(f"📧 They can now sign up and will be assigned the '{auth_role}' role.")
-                            st.balloons()
+                            st.success(f"User {auth_email} has been authorized!")
+                            st.info(f"They can now sign up and will be assigned the '{auth_role}' role.")
                             st.rerun()
                         else:
-                            st.error("❌ Failed to authorize user. Please try again.")
+                            st.error("Failed to authorize user. Please try again.")
 
 #%% Tab 2: Invite Existing User
 
@@ -233,19 +232,19 @@ with tab2:
             )
         
         submit_invite = st.form_submit_button(
-            "📧 Send Invitation",
+            "Send Invitation",
             use_container_width=True,
             type="primary"
         )
         
         if submit_invite:
             if not user_to_invite:
-                st.error("❌ No users available to invite")
+                st.error("No users available to invite")
             else:
                 # Check if already authorized
                 existing_auth = supabase.check_user_authorized(user_to_invite['email'], selected_org_id)
                 if existing_auth:
-                    st.error(f"❌ User {user_to_invite['email']} is already authorized for this organization")
+                    st.error(f"User {user_to_invite['email']} is already authorized for this organization")
                 else:
                     # Add to authorized users
                     result = supabase.add_authorized_user(
@@ -274,18 +273,18 @@ with tab2:
                             )
                             
                             if not user_to_invite.get('primary_organization_id'):
-                                st.success(f"✅ User {user_to_invite['email']} has been added to the organization!")
-                                st.info(f"🎉 They now have the '{invite_role}' role and can access organization data.")
+                                st.success(f"User {user_to_invite['email']} has been added to the organization!")
+                                st.info(f"They now have the '{invite_role}' role and can access organization data.")
                             else:
-                                st.success(f"✅ User {user_to_invite['email']} has been added to {selected_org_name}!")
-                                st.info(f"🏢 They can now switch between organizations and access data from both.")
+                                st.success(f"User {user_to_invite['email']} has been added to {selected_org_name}!")
+                                st.info(f"They can now switch between organizations and access data from both.")
                             
                             st.balloons()
                             st.rerun()
                         else:
-                            st.error("❌ Failed to add user to organization. Please try again.")
+                            st.error("Failed to add user to organization. Please try again.")
                     else:
-                        st.error("❌ Failed to send invitation. Please try again.")
+                        st.error("Failed to send invitation. Please try again.")
 
 #%% Tab 3: View Authorized Users
 
@@ -361,9 +360,9 @@ with tab3:
         
         # Add status column
         df['status'] = df.apply(
-            lambda row: '✅ Signed Up' if row.get('has_signed_up') 
-            else '❌ Inactive' if not row.get('is_active')
-            else '⏳ Pending',
+            lambda row: 'Signed Up' if row.get('has_signed_up') 
+            else 'Inactive' if not row.get('is_active')
+            else 'Pending',
             axis=1
         )
         
@@ -402,8 +401,8 @@ with tab3:
                 st.write(f"**Organization:** {selected_auth_user.get('organization_name', 'N/A')}")
                 st.write(f"**Assigned Role:** {selected_auth_user.get('assigned_role', 'N/A')}")
                 
-                status = '✅ Signed Up' if selected_auth_user.get('has_signed_up') else \
-                        '❌ Inactive' if not selected_auth_user.get('is_active') else '⏳ Pending Signup'
+                status = 'Signed Up' if selected_auth_user.get('has_signed_up') else \
+                        'Inactive' if not selected_auth_user.get('is_active') else 'Pending Signup'
                 st.write(f"**Status:** {status}")
                 
                 if selected_auth_user.get('authorization_note'):
@@ -419,12 +418,12 @@ with tab3:
                 st.markdown("#### Actions")
                 
                 if not selected_auth_user.get('has_signed_up') and selected_auth_user.get('is_active'):
-                    if st.button("🚫 Revoke Authorization", key="revoke"):
+                    if st.button("Revoke Authorization", key="revoke"):
                         if supabase.remove_authorized_user(selected_auth_user['id']):
-                            st.success("✅ Authorization revoked")
+                            st.success("Authorization revoked")
                             st.rerun()
                         else:
-                            st.error("❌ Failed to revoke authorization")
+                            st.error("Failed to revoke authorization")
     else:
         st.info("No authorized users found matching your filters")
 

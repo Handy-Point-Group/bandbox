@@ -17,12 +17,17 @@ import sys
 sys.path.append('..')
 from utils import get_auth_manager, get_supabase_client, get_active_organization, get_active_team
 
+#%% Page Configuration
+
+st.set_page_config(page_title="Bandbox - Player Information", page_icon=r"app/images/bandbox.png", layout="wide")
+
+
 #%% Authentication Check
 auth = get_auth_manager()
 supabase_client = get_supabase_client()
 
 if not auth.check_authentication():
-    st.error("⚠️ You must be logged in to access this page.")
+    st.error("You must be logged in to access this page.")
     st.stop()
 
 current_user = auth.get_current_user()
@@ -36,7 +41,7 @@ active_team = get_active_team()
 
 # Show active team context if selected
 if active_team:
-    st.sidebar.success(f"📍 Viewing: {active_team.get('name', 'Team')}")
+    st.sidebar.success(f"Viewing: {active_team.get('name', 'Team')}")
 
 #%% Connect to Supabase
 db = st.connection("supabase",type=SupabaseConnection)
@@ -147,18 +152,18 @@ if not current_org:
         user_linked_players = players_show[players_show.get('full_name', pd.Series()) == user_full_name]
     
     if len(user_linked_players) == 0:
-        st.warning("⚠️ You don't have a player profile yet.")
+        st.warning("You don't have a player profile yet.")
         st.info("""
         **Create your player profile to:**
-        - 📊 Track your training data and stats
-        - 🎯 Set and monitor your baseball goals
-        - 📈 View your performance analytics
-        - 🏢 Join organizations when invited
+        - Track your training data and stats
+        - Set and monitor your baseball goals
+        - View your performance analytics
+        - Join organizations when invited
         """)
         
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            if st.button("🎉 Create Your Player Profile", use_container_width=True, type="primary"):
+            if st.button("Create Your Player Profile", use_container_width=True, type="primary"):
                 st.switch_page("pages/player-onboarding.py")
         
         st.stop()

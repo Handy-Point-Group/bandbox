@@ -17,8 +17,8 @@ from utils import (
 #%% Page Configuration
 
 st.set_page_config(
-    page_title="Organization Dashboard",
-    page_icon="🏢",
+    page_title="Bandbox - Organization Dashboard",
+    page_icon=r"app/images/bandbox.png",
     layout="wide"
 )
 
@@ -33,7 +33,7 @@ user_role = current_user.get('role', 'player') if current_user else 'player'
 # Check for admin-org role or higher
 allowed_roles = ['admin-org', 'superadmin']
 if user_role not in allowed_roles:
-    st.error("🚫 Access Denied: This page is only accessible to Organization Administrators.")
+    st.error("Access Denied: This page is only accessible to Organization Administrators.")
     st.stop()
 
 supabase = get_supabase_client()
@@ -41,7 +41,7 @@ supabase = get_supabase_client()
 # Get the active organization (from switcher) or fall back to primary
 user_org_id = get_active_organization_id() or current_user.get('primary_organization_id')
 if not user_org_id:
-    st.error("❌ No organization assigned. Please contact your administrator.")
+    st.error("No organization assigned. Please contact your administrator.")
     st.stop()
 
 # Fetch organization details (use cached active org if available)
@@ -49,7 +49,7 @@ user_org = get_active_organization()
 if not user_org:
     user_org = supabase.get_organization(user_org_id)
 if not user_org:
-    st.error("❌ Organization not found.")
+    st.error("Organization not found.")
     st.stop()
 
 #%% Page Title
@@ -60,18 +60,18 @@ org_subtype = user_org.get('org_subtype', '')
 has_teams = user_org.get('has_teams', True)
 
 if org_category == 'training':
-    st.caption(f"🎯 Training Organization - {org_subtype.replace('_', ' ').title() if org_subtype else 'N/A'}")
+    st.caption(f"Training Organization - {org_subtype.replace('_', ' ').title() if org_subtype else 'N/A'}")
 else:
-    st.caption(f"🏆 Competitive Organization - {org_subtype.replace('_', ' ').title() if org_subtype else 'N/A'}")
+    st.caption(f"Competitive Organization - {org_subtype.replace('_', ' ').title() if org_subtype else 'N/A'}")
 
 st.markdown("---")
 
 #%% Tabs based on organization type
 
 if has_teams:
-    tab1, tab2, tab3, tab4 = st.tabs(["⚾ Teams", "👥 Players", "🧢 Coaches", "📋 Roster Management"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Teams", "Players", "Coaches", "Roster Management"])
 else:
-    tab1, tab2, tab3 = st.tabs(["👥 Players", "🧢 Coaches", "📊 Overview"])
+    tab1, tab2, tab3 = st.tabs(["Players", "Coaches", "Overview"])
 
 #%% Helper Functions
 
@@ -135,7 +135,7 @@ if has_teams:
                     
                     with col1:
                         st.write(f"**Season:** {team.get('season', 'N/A')}")
-                        st.write(f"**Status:** {'✅ Active' if team.get('is_active', True) else '❌ Inactive'}")
+                        st.write(f"**Status:** {'Active' if team.get('is_active', True) else 'Inactive'}")
                         
                         # Show head coach
                         head_coach_id = team.get('head_coach_id')
@@ -174,15 +174,15 @@ if has_teams:
                                 key=f"head_coach_{team['id']}"
                             )
                             
-                            if new_head_coach != "-- Select New Head Coach --" and st.button("✅ Set", key=f"set_hc_{team['id']}"):
+                            if new_head_coach != "-- Select New Head Coach --" and st.button("Set", key=f"set_hc_{team['id']}"):
                                 try:
                                     supabase.client.table('teams').update({
                                         'head_coach_id': coach_options_quick[new_head_coach]
                                     }).eq('id', team['id']).execute()
-                                    st.success(f"✅ {new_head_coach} is now head coach!")
+                                    st.success(f"{new_head_coach} is now head coach!")
                                     st.rerun()
                                 except Exception as e:
-                                    st.error(f"❌ Error: {e}")
+                                    st.error(f"Error: {e}")
         else:
             st.info("No teams created yet. Create your first team below!")
         
@@ -190,7 +190,7 @@ if has_teams:
         
         # Assign Coach to Team Section
         if teams and coaches:
-            st.markdown("### 🧢 Assign Coach to Team")
+            st.markdown("### Assign Coach to Team")
             
             col1, col2 = st.columns(2)
             
@@ -243,7 +243,7 @@ if has_teams:
                         except:
                             pass  # Might already exist
                         
-                        st.success(f"✅ {selected_coach_name} is now Head Coach of {selected_team_for_coach}!")
+                        st.success(f"{selected_coach_name} is now Head Coach of {selected_team_for_coach}!")
                     else:
                         # Add to team_coaches junction table
                         team_coach_entry = {
@@ -253,19 +253,19 @@ if has_teams:
                             'is_primary': False
                         }
                         supabase.client.table('team_coaches').insert(team_coach_entry).execute()
-                        st.success(f"✅ {selected_coach_name} assigned as {coach_role.replace('_', ' ').title()} for {selected_team_for_coach}!")
+                        st.success(f"{selected_coach_name} assigned as {coach_role.replace('_', ' ').title()} for {selected_team_for_coach}!")
                     
                     st.rerun()
                 except Exception as e:
                     if 'duplicate' in str(e).lower() or 'unique' in str(e).lower():
-                        st.warning("⚠️ This coach is already assigned to this team.")
+                        st.warning("This coach is already assigned to this team.")
                     else:
-                        st.error(f"❌ Error: {str(e)}")
+                        st.error(f"Error: {str(e)}")
         
         st.markdown("---")
         
         # Create new team
-        st.markdown("### ➕ Create New Team")
+        st.markdown("### Create New Team")
         
         with st.form("create_team_form", clear_on_submit=True):
             col1, col2 = st.columns(2)
@@ -309,11 +309,11 @@ if has_teams:
             
             team_description = st.text_area("Description (Optional)", placeholder="Team description...", height=80)
             
-            submit_team = st.form_submit_button("✅ Create Team", use_container_width=True, type="primary")
+            submit_team = st.form_submit_button("Create Team", use_container_width=True, type="primary")
             
             if submit_team:
                 if not team_name:
-                    st.error("❌ Team name is required")
+                    st.error("Team name is required")
                 else:
                     team_data = {
                         "organization_id": user_org_id,
@@ -329,7 +329,7 @@ if has_teams:
                     try:
                         result = supabase.client.table('teams').insert(team_data).execute()
                         if result.data:
-                            st.success(f"✅ Team '{team_name}' created successfully!")
+                            st.success(f"Team '{team_name}' created successfully!")
                             
                             # If head coach selected, also add to team_coaches
                             if head_coach_id:
@@ -347,9 +347,9 @@ if has_teams:
                             st.balloons()
                             st.rerun()
                         else:
-                            st.error("❌ Failed to create team")
+                            st.error("Failed to create team")
                     except Exception as e:
-                        st.error(f"❌ Error creating team: {str(e)}")
+                        st.error(f"Error creating team: {str(e)}")
 
 #%% Players Tab
 
@@ -375,14 +375,14 @@ with players_tab:
     st.markdown("---")
     
     # Add players section
-    st.markdown("### ➕ Add Players")
+    st.markdown("### Add Players")
     
     add_method = st.radio(
         "How would you like to add players?",
         options=['invite_new', 'add_existing'],
         format_func=lambda x: {
-            'invite_new': '📧 Invite New Player (send signup invitation)',
-            'add_existing': '👤 Add Existing User (already has an account)'
+            'invite_new': 'Invite New Player (send signup invitation)',
+            'add_existing': 'Add Existing User (already has an account)'
         }[x],
         horizontal=True
     )
@@ -417,7 +417,7 @@ with players_tab:
             
             if submit_invite:
                 if not player_email or '@' not in player_email:
-                    st.error("❌ Valid email address is required")
+                    st.error("Valid email address is required")
                 else:
                     # Check if user already exists
                     existing_user = supabase.get_user_by_email(player_email)
@@ -425,7 +425,7 @@ with players_tab:
                     if existing_user:
                         # User exists - check if already in org
                         if existing_user.get('primary_organization_id') == user_org_id:
-                            st.warning("⚠️ This user is already in your organization")
+                            st.warning("This user is already in your organization")
                         else:
                             # Add to authorized_users to join this org
                             try:
@@ -438,19 +438,19 @@ with players_tab:
                                     authorization_note=invite_note if invite_note else "Added by org admin"
                                 )
                                 if auth_result:
-                                    st.success(f"✅ {player_email} has been authorized to join your organization!")
+                                    st.success(f"{player_email} has been authorized to join your organization!")
                                     st.info("They can now switch to your organization from their account.")
                                 else:
-                                    st.error("❌ Failed to authorize user")
+                                    st.error("Failed to authorize user")
                             except Exception as e:
-                                st.error(f"❌ Error: {str(e)}")
+                                st.error(f"Error: {str(e)}")
                     else:
                         # New user - add to authorized_users
                         try:
                             # Check if already authorized
                             existing_auth = supabase.check_user_authorized(player_email, user_org_id)
                             if existing_auth:
-                                st.warning("⚠️ This email has already been invited")
+                                st.warning("This email has already been invited")
                             else:
                                 auth_result = supabase.add_authorized_user(
                                     email=player_email,
@@ -461,8 +461,8 @@ with players_tab:
                                     authorization_note=invite_note if invite_note else "Invited player"
                                 )
                                 if auth_result:
-                                    st.success(f"✅ Invitation sent to {player_email}!")
-                                    st.info("📧 They will be automatically added when they sign up.")
+                                    st.success(f"Invitation sent to {player_email}!")
+                                    st.info("They will be automatically added when they sign up.")
                                     
                                     # Also create a placeholder player2 record if we have enough info
                                     if player_name:
@@ -482,9 +482,9 @@ with players_tab:
                                     
                                     st.rerun()
                                 else:
-                                    st.error("❌ Failed to send invitation")
+                                    st.error("Failed to send invitation")
                         except Exception as e:
-                            st.error(f"❌ Error: {str(e)}")
+                            st.error(f"Error: {str(e)}")
     
     else:  # add_existing
         st.markdown("#### Add Existing User")
@@ -498,11 +498,11 @@ with players_tab:
             
             if found_user:
                 if found_user.get('primary_organization_id') == user_org_id:
-                    st.success(f"✅ {found_user.get('full_name', search_email)} is already in your organization!")
+                    st.success(f"{found_user.get('full_name', search_email)} is already in your organization!")
                 else:
                     st.info(f"Found: **{found_user.get('full_name', 'Unknown')}** ({found_user.get('email')})")
                     
-                    if st.button("➕ Add to Organization", type="primary"):
+                    if st.button("Add to Organization", type="primary"):
                         try:
                             # Add to authorized_users
                             auth_result = supabase.add_authorized_user(
@@ -520,25 +520,25 @@ with players_tab:
                                     supabase.client.table('users').update({
                                         'primary_organization_id': user_org_id
                                     }).eq('id', found_user['id']).execute()
-                                    st.success(f"✅ {found_user.get('full_name', search_email)} has been added to your organization!")
+                                    st.success(f"{found_user.get('full_name', search_email)} has been added to your organization!")
                                 else:
-                                    st.success(f"✅ {found_user.get('full_name', search_email)} has been authorized to join!")
+                                    st.success(f"{found_user.get('full_name', search_email)} has been authorized to join!")
                                     st.info("They can switch to your organization from their account settings.")
                                 st.rerun()
                             else:
-                                st.error("❌ Failed to add user")
+                                st.error("Failed to add user")
                         except Exception as e:
-                            st.error(f"❌ Error: {str(e)}")
+                            st.error(f"Error: {str(e)}")
             else:
                 st.warning(f"No user found with email: {search_email}")
-                st.info("💡 Use 'Invite New Player' to send them a signup invitation.")
+                st.info("Use 'Invite New Player' to send them a signup invitation.")
 
 #%% Coaches Tab
 
 coaches_tab = tab3 if has_teams else tab2
 
 with coaches_tab:
-    st.subheader("🧢 Coach Management")
+    st.subheader("Coach Management")
     
     coaches = get_org_coaches()
     
@@ -557,14 +557,14 @@ with coaches_tab:
     st.markdown("---")
     
     # Add coaches section
-    st.markdown("### ➕ Add Coaches")
+    st.markdown("### Add Coaches")
     
     coach_add_method = st.radio(
         "How would you like to add a coach?",
         options=['invite_new_coach', 'add_existing_coach'],
         format_func=lambda x: {
-            'invite_new_coach': '📧 Invite New Coach (send signup invitation)',
-            'add_existing_coach': '👤 Add Existing User as Coach'
+            'invite_new_coach': 'Invite New Coach (send signup invitation)',
+            'add_existing_coach': 'Add Existing User as Coach'
         }[x],
         horizontal=True,
         key="coach_add_method"
@@ -596,12 +596,12 @@ with coaches_tab:
             
             if submit_coach_invite:
                 if not coach_email or '@' not in coach_email:
-                    st.error("❌ Valid email address is required")
+                    st.error("Valid email address is required")
                 else:
                     # Check if already authorized
                     existing_auth = supabase.check_user_authorized(coach_email, user_org_id)
                     if existing_auth:
-                        st.warning("⚠️ This email has already been invited")
+                        st.warning("This email has already been invited")
                     else:
                         try:
                             # Add to authorized_users as coach
@@ -636,9 +636,9 @@ with coaches_tab:
                                 
                                 st.rerun()
                             else:
-                                st.error("❌ Failed to send invitation")
+                                st.error("Failed to send invitation")
                         except Exception as e:
-                            st.error(f"❌ Error: {str(e)}")
+                            st.error(f"Error: {str(e)}")
     
     else:  # add_existing_coach
         st.markdown("#### Promote Existing User to Coach")
@@ -663,7 +663,7 @@ with coaches_tab:
                         format_func=lambda x: x.replace('_', ' ').title()
                     )
                 
-                if st.form_submit_button("🧢 Make Coach", type="primary"):
+                if st.form_submit_button("Make Coach", type="primary"):
                     try:
                         # Update user role
                         supabase.update_user_role(selected_user['id'], 'coach')
@@ -681,10 +681,10 @@ with coaches_tab:
                         }
                         supabase.client.table('coaches').insert(coach_data).execute()
                         
-                        st.success(f"✅ {selected_user.get('full_name')} is now a coach!")
+                        st.success(f"{selected_user.get('full_name')} is now a coach!")
                         st.rerun()
                     except Exception as e:
-                        st.error(f"❌ Error: {str(e)}")
+                        st.error(f"Error: {str(e)}")
         else:
             st.info("No users available to promote. All users are already coaches or admins.")
 
@@ -692,15 +692,15 @@ with coaches_tab:
 
 if has_teams:
     with tab4:
-        st.subheader("📋 Roster Management")
+        st.subheader("Roster Management")
         
         teams = get_org_teams()
         players = get_org_players()
         
         if not teams:
-            st.warning("⚠️ Create a team first before managing rosters.")
+            st.warning("Create a team first before managing rosters.")
         elif not players:
-            st.warning("⚠️ Add some players first before building rosters.")
+            st.warning("Add some players first before building rosters.")
         else:
             # Select team
             team_options = {t['name']: t['id'] for t in teams}
@@ -739,7 +739,7 @@ if has_teams:
                     
                     jersey_num = st.number_input("Jersey Number", min_value=0, max_value=99, value=None)
                     
-                    if st.button("➕ Add to Team", type="primary"):
+                    if st.button("Add to Team", type="primary"):
                         try:
                             roster_entry = {
                                 'team_id': selected_team_id,
@@ -748,10 +748,10 @@ if has_teams:
                                 'is_active': True
                             }
                             supabase.client.table('team_players').insert(roster_entry).execute()
-                            st.success(f"✅ Added {selected_player_name} to {selected_team_name}!")
+                            st.success(f"Added {selected_player_name} to {selected_team_name}!")
                             st.rerun()
                         except Exception as e:
-                            st.error(f"❌ Error: {str(e)}")
+                            st.error(f"Error: {str(e)}")
                 else:
                     st.info("All players are already on this team.")
 
@@ -759,7 +759,7 @@ if has_teams:
 
 if not has_teams:
     with tab3:
-        st.subheader("📊 Organization Overview")
+        st.subheader("Organization Overview")
         
         players = get_org_players()
         coaches = get_org_coaches()
@@ -782,8 +782,3 @@ if not has_teams:
         st.write(f"**Type:** {org_subtype.replace('_', ' ').title() if org_subtype else 'N/A'}")
         st.write(f"**Email:** {user_org.get('email', 'N/A')}")
         st.write(f"**Phone:** {user_org.get('phone', 'N/A')}")
-
-#%% Footer
-
-st.markdown("---")
-st.caption(f"Logged in as: {current_user.get('email', 'Unknown')} | Role: {user_role.replace('-', ' ').title()}")

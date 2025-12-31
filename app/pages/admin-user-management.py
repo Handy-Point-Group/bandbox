@@ -25,12 +25,18 @@ current_user = get_current_user()
 
 #%% Page Configuration
 
-st.title("👥 User Management")
+st.set_page_config(
+    page_title="Bandbox - User Management",
+    page_icon=r"app/images/bandbox.png",
+    layout="wide"
+)
+
+st.title("User Management")
 st.markdown("---")
 
 #%% Tabs
 
-tab1, tab2, tab3 = st.tabs(["📋 View Users", "➕ Create User", "🏢 Organizations"])
+tab1, tab2, tab3 = st.tabs(["View Users", "Create User", "Organizations"])
 
 #%% Tab 1: View Users
 
@@ -116,29 +122,29 @@ with tab1:
                     }[x]
                 )
                 
-                if st.button("Update Role", key="update_role"):
+                if st.button("Update Role", key="update_role", type='primary'):
                     if supabase.update_user_role(selected_user['id'], new_role):
-                        st.success(f"✅ Role updated to '{new_role}'")
+                        st.success(f"Role updated to '{new_role}'")
                         st.rerun()
                     else:
-                        st.error("❌ Failed to update role")
+                        st.error("Failed to update role")
                 
                 # Toggle active status
                 current_status = selected_user.get('is_active', False)
                 if current_status:
-                    if st.button("🚫 Deactivate User", key="deactivate"):
+                    if st.button("Deactivate User", key="deactivate", type='primary'):
                         if supabase.deactivate_user(selected_user['id']):
-                            st.success("✅ User deactivated")
+                            st.success("User deactivated")
                             st.rerun()
                         else:
-                            st.error("❌ Failed to deactivate user")
+                            st.error("Failed to deactivate user")
                 else:
-                    if st.button("✅ Activate User", key="activate"):
+                    if st.button("Activate User", key="activate", type='primary'):
                         if supabase.activate_user(selected_user['id']):
-                            st.success("✅ User activated")
+                            st.success("User activated")
                             st.rerun()
                         else:
-                            st.error("❌ Failed to activate user")
+                            st.error("Failed to activate user")
     else:
         st.info("No users found")
 
@@ -189,14 +195,14 @@ with tab2:
         
         if submit_create:
             if not new_email or not new_full_name:
-                st.error("❌ Email and Full Name are required")
+                st.error("Email and Full Name are required")
             elif not new_org_id:
-                st.error("❌ Please select an organization")
+                st.error("Please select an organization")
             else:
                 # Check if user already exists
                 existing_user = supabase.get_user_by_email(new_email)
                 if existing_user:
-                    st.error(f"❌ User with email {new_email} already exists")
+                    st.error(f"User with email {new_email} already exists")
                 else:
                     # Create user
                     created_user = supabase.create_user(
@@ -208,11 +214,11 @@ with tab2:
                     )
                     
                     if created_user:
-                        st.success(f"✅ User created successfully: {new_email}")
+                        st.success(f"User created successfully: {new_email}")
                         st.balloons()
                         st.rerun()
                     else:
-                        st.error("❌ Failed to create user. Please check logs.")
+                        st.error("Failed to create user. Please check logs.")
 
 #%% Tab 3: Organizations
 
@@ -253,12 +259,12 @@ with tab3:
         
         if submit_org:
             if not org_name:
-                st.error("❌ Organization name is required")
+                st.error("Organization name is required")
             else:
                 # Check if organization already exists
                 existing_orgs = [org for org in organizations if org['name'].lower() == org_name.lower()]
                 if existing_orgs:
-                    st.error(f"❌ Organization '{org_name}' already exists")
+                    st.error(f"Organization '{org_name}' already exists")
                 else:
                     settings = {
                         "theme": theme,
@@ -268,14 +274,8 @@ with tab3:
                     created_org = supabase.create_organization(org_name, settings)
                     
                     if created_org:
-                        st.success(f"✅ Organization created: {org_name}")
+                        st.success(f"Organization created: {org_name}")
                         st.balloons()
                         st.rerun()
                     else:
-                        st.error("❌ Failed to create organization")
-
-#%% Footer
-
-st.markdown("---")
-st.caption(f"Logged in as: {current_user.get('email', 'Unknown')} | Role: {current_user.get('role', 'Unknown').title()}")
-
+                        st.error("Failed to create organization")

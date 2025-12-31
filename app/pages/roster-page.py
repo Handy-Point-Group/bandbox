@@ -14,12 +14,16 @@ import sys
 sys.path.append('..')
 from utils import get_auth_manager, get_supabase_client, get_active_organization, get_active_team
 
+#%% Page Configuration
+
+st.set_page_config(page_title="Bandbox - Roster Page", page_icon=r"app/images/bandbox.png", layout="wide")
+
 #%% Authentication Check
 auth = get_auth_manager()
 supabase_client = get_supabase_client()
 
 if not auth.check_authentication():
-    st.error("⚠️ You must be logged in to access this page.")
+    st.error("You must be logged in to access this page.")
     st.stop()
 
 current_user = auth.get_current_user()
@@ -29,13 +33,13 @@ current_org = get_active_organization() or auth.get_current_organization()
 active_team = get_active_team()
 
 if not current_org:
-    st.warning("⚠️ You are not currently part of an organization.")
+    st.warning("You are not currently part of an organization.")
     st.info("Contact your team administrator to be invited to an organization.")
     st.stop()
 
 # Show active team if selected
 if active_team:
-    st.sidebar.success(f"📍 Viewing: {active_team.get('name', 'Team')}")
+    st.sidebar.success(f"Viewing: {active_team.get('name', 'Team')}")
 
 #%% Connect to Supabase
 db = st.connection("supabase",type=SupabaseConnection)
@@ -200,40 +204,40 @@ if edit_toggle:
 else:
     st.dataframe(fplayers, hide_index=True)
 
-#%% Input New Players
+#%% Input New Players - commented out because this should be handled elsewhere, but keeping here in case we want to use the code
 
-st.subheader("Input New Players", divider="yellow")
-default_year = datetime.now().year + 4
-positions = [None, "C", "1B", "2B", "3B", "SS", "OF", "UT"]
+# st.subheader("Input New Players", divider="yellow")
+# default_year = datetime.now().year + 4
+# positions = [None, "C", "1B", "2B", "3B", "SS", "OF", "UT"]
 
-with st.form("input_new_players", clear_on_submit=True, enter_to_submit=False, border=True):
-    first_name = st.text_input("First Name")
-    last_name = st.text_input("Last Name")
-    grad_year = st.number_input("HS Graduation Year", value=default_year)
-    pitcher = st.checkbox("Pitcher?", value=False)
-    pos_1 = st.selectbox("Primary Position", positions)
-    pos_2 = st.selectbox("Secondary Position", positions)
-    pos_3 = st.selectbox("Tertiary Position", positions)
-    rapsodo_id = st.text_input("Rapsodo ID")
-    player_submit = st.form_submit_button(label="Submit")
+# with st.form("input_new_players", clear_on_submit=True, enter_to_submit=False, border=True):
+#     first_name = st.text_input("First Name")
+#     last_name = st.text_input("Last Name")
+#     grad_year = st.number_input("HS Graduation Year", value=default_year)
+#     pitcher = st.checkbox("Pitcher?", value=False)
+#     pos_1 = st.selectbox("Primary Position", positions)
+#     pos_2 = st.selectbox("Secondary Position", positions)
+#     pos_3 = st.selectbox("Tertiary Position", positions)
+#     rapsodo_id = st.text_input("Rapsodo ID")
+#     player_submit = st.form_submit_button(label="Submit")
 
-def clean_value(value):
-    if value in ("", None):
-        return None
-    return value
+# def clean_value(value):
+#     if value in ("", None):
+#         return None
+#     return value
 
-if player_submit:
-    new_player = {
-        "first_name": clean_value(first_name),
-        "last_name": clean_value(last_name),
-        "grad_year": clean_value(grad_year),
-        "pitcher": clean_value(pitcher),
-        "pos_1": clean_value(pos_1),
-        "pos_2": clean_value(pos_2),
-        "pos_3": clean_value(pos_3),
-        "rapsodo_id": clean_value(rapsodo_id),
-    }
+# if player_submit:
+#     new_player = {
+#         "first_name": clean_value(first_name),
+#         "last_name": clean_value(last_name),
+#         "grad_year": clean_value(grad_year),
+#         "pitcher": clean_value(pitcher),
+#         "pos_1": clean_value(pos_1),
+#         "pos_2": clean_value(pos_2),
+#         "pos_3": clean_value(pos_3),
+#         "rapsodo_id": clean_value(rapsodo_id),
+#     }
 
-    response = db.client.table("players").insert(new_player).execute()
-    st.session_state.form_submitted = True
-    st.success("New Player Added")
+#     response = db.client.table("players").insert(new_player).execute()
+#     st.session_state.form_submitted = True
+#     st.success("New Player Added")

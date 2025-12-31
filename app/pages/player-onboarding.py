@@ -10,14 +10,14 @@ from utils import get_auth_manager, get_supabase_client
 
 #%% Page Configuration
 
-st.set_page_config(page_title="Player Onboarding - Bandbox", page_icon=r"app/images/bandbox.png", layout="wide")
+st.set_page_config(page_title="Bandbox - Player Onboarding", page_icon=r"app/images/bandbox.png", layout="wide")
 
 #%% Authentication Check
 auth = get_auth_manager()
 supabase_client = get_supabase_client()
 
 if not auth.check_authentication():
-    st.error("⚠️ You must be logged in to access this page.")
+    st.error("You must be logged in to access this page.")
     st.stop()
 
 current_user = auth.get_current_user()
@@ -46,16 +46,16 @@ existing_profile = get_user_player_profile(current_user['id'])
 st.title("Player Profile & Onboarding")
 
 if existing_profile:
-    st.info("✅ You already have a player profile. You can update it below.")
+    st.info("You already have a player profile. You can update it below.")
 else:
-    st.success("👋 Welcome! Let's create your player profile.")
+    st.success("Welcome! Let's create your player profile.")
 
 st.markdown("---")
 
 #%% Main Form
 
 with st.form("player_onboarding_form", clear_on_submit=False):
-    st.subheader("📋 Basic Information")
+    st.subheader("Basic Information")
     
     col1, col2 = st.columns(2)
     
@@ -99,7 +99,7 @@ with st.form("player_onboarding_form", clear_on_submit=False):
     
     st.divider()
     
-    st.subheader("⚾ Position Information")
+    st.subheader("Position Information")
     
     position_options = [
         "Select Position",
@@ -134,7 +134,7 @@ with st.form("player_onboarding_form", clear_on_submit=False):
     
     st.divider()
     
-    st.subheader("🔗 Integration IDs (Optional)")
+    st.subheader("Integration IDs (Optional)")
     st.caption("These help link your data from external systems like Rapsodo")
     
     col1, col2 = st.columns(2)
@@ -155,7 +155,7 @@ with st.form("player_onboarding_form", clear_on_submit=False):
     
     st.divider()
     
-    st.subheader("📊 Player Survey")
+    st.subheader("Player Survey")
     st.caption("Help us understand your background and goals")
     
     # Get existing survey data from metadata
@@ -229,7 +229,7 @@ with st.form("player_onboarding_form", clear_on_submit=False):
     
     st.divider()
     
-    st.subheader("🎯 Goals & Notes")
+    st.subheader("Goals & Notes")
     
     goals = st.text_area(
         "Your Baseball Goals",
@@ -249,7 +249,7 @@ with st.form("player_onboarding_form", clear_on_submit=False):
     
     # Submit button
     submitted = st.form_submit_button(
-        "💾 Save Player Profile" if existing_profile else "🎉 Create Player Profile",
+        "Save Player Profile" if existing_profile else "Create Player Profile",
         use_container_width=True,
         type="primary"
     )
@@ -259,16 +259,16 @@ with st.form("player_onboarding_form", clear_on_submit=False):
         errors = []
         
         if not first_name or not last_name:
-            errors.append("❌ First name and last name are required")
+            errors.append("First name and last name are required")
         
         if not grad_year or grad_year < current_year - 10 or grad_year > current_year + 10:
-            errors.append("❌ Please enter a valid graduation year")
+            errors.append("Please enter a valid graduation year")
         
         if batting_hand == "Select":
-            errors.append("❌ Please select your batting hand")
+            errors.append("Please select your batting hand")
         
         if throwing_hand == "Select":
-            errors.append("❌ Please select your throwing hand")
+            errors.append("Please select your throwing hand")
         
         # Display errors
         if errors:
@@ -351,15 +351,15 @@ with st.form("player_onboarding_form", clear_on_submit=False):
 
 st.markdown("---")
 
-with st.expander("ℹ️ Why do we collect this information?"):
+with st.expander("Why do we collect this information?"):
     st.markdown("""
     **Your player profile helps:**
     
-    - 📊 **Track Your Progress**: Link all your training data and stats to your profile
-    - 🎯 **Personalized Insights**: Get tailored recommendations based on your position and goals
-    - 👥 **Team Integration**: Easily join organizations and teams when invited
-    - 📈 **Performance Analysis**: Compare your stats to players at your level
-    - 🎓 **College Recruiting**: Showcase your development to coaches (if interested)
+    - **Track Your Progress**: Link all your training data and stats to your profile
+    - **Personalized Insights**: Get tailored recommendations based on your position and goals
+    - **Team Integration**: Easily join organizations and teams when invited
+    - **Performance Analysis**: Compare your stats to players at your level
+    - **College Recruiting**: Showcase your development to coaches (if interested)
     
     **Privacy**: Your data is secure and only shared with organizations you join.
     """)

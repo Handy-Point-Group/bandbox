@@ -12,12 +12,20 @@ import sys
 sys.path.append('..')
 from utils import get_auth_manager, get_supabase_client, get_active_organization, get_active_team
 
+#%% Page Configuration
+
+st.set_page_config(
+    page_title="Bandbox - Data Input",
+    page_icon=r"app/images/bandbox.png",
+    layout="wide"
+)
+
 #%% Authentication Check
 auth = get_auth_manager()
 supabase_client = get_supabase_client()
 
 if not auth.check_authentication():
-    st.error("⚠️ You must be logged in to access this page.")
+    st.error("You must be logged in to access this page.")
     st.stop()
 
 current_user = auth.get_current_user()
@@ -28,11 +36,11 @@ active_team = get_active_team()
 
 # Users can upload data with or without an organization
 if not current_org:
-    st.info("📊 You can upload your personal training data even without an organization.")
+    st.info("You can upload your personal training data even without an organization.")
 
 # Show active team context if selected
 if active_team:
-    st.sidebar.success(f"📍 Viewing: {active_team.get('name', 'Team')}")
+    st.sidebar.success(f"Viewing: {active_team.get('name', 'Team')}")
 
 #%% Connect to Supabase
 db = st.connection("supabase",type=SupabaseConnection)

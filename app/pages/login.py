@@ -7,7 +7,7 @@ from utils import get_auth_manager
 
 #%% Page Configuration
 
-st.set_page_config(page_title="Login - Bandbox", page_icon=r"app/images/bandbox.png", layout="centered")
+st.set_page_config(page_title="Bandbox - Login", page_icon=r"app/images/bandbox.png", layout="centered")
 
 # Custom CSS for button styling
 st.markdown("""
