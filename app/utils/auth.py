@@ -151,10 +151,10 @@ class AuthManager:
             col1, col2, col3 = st.columns([1, 1, 1])
             with col2:
                 if provider:
-                    if st.button("🔐 Log in with Google", use_container_width=True):
+                    if st.button("Log in with Google", use_container_width=True):
                         st.login(provider)
                 else:
-                    if st.button("🔐 Log in with Google", use_container_width=True):
+                    if st.button("Log in with Google", use_container_width=True):
                         st.login()
             
             st.stop()
@@ -366,7 +366,7 @@ class AuthManager:
                 'user': 'User'
             }
             display_name = role_names.get(required_role, required_role.replace('_', ' ').replace('-', ' ').title())
-            st.error(f"🚫 Access Denied: This page requires '{display_name}' role or higher.")
+            st.error(f"Access Denied: This page requires '{display_name}' role or higher.")
             st.stop()
     
     def require_permission(self, permission: str):
@@ -377,7 +377,7 @@ class AuthManager:
             permission: Permission to require
         """
         if not self.has_permission(permission):
-            st.error(f"🚫 Access Denied: You don't have the '{permission}' permission.")
+            st.error(f"Access Denied: You don't have the '{permission}' permission.")
             st.stop()
     
     def display_user_info(self):
@@ -388,10 +388,8 @@ class AuthManager:
             current_org = self.get_current_organization()
             
             with st.sidebar:
-                st.divider()
-                st.write("**Logged in as:**")
-                st.write(f"👤 {user.get('full_name', 'Unknown')}")
-                st.write(f"✉️ {user.get('email', '')}")
+                st.write(f"**Logged in as:** {user.get('full_name', 'Unknown')}")
+                st.write(f"{user.get('email', '')}")
                 
                 # Organization switcher for multi-org users
                 user_orgs = self.get_user_organizations()
@@ -413,14 +411,14 @@ class AuthManager:
                         self.switch_organization(org_names[selected_org_name])
                 elif len(user_orgs) == 1:
                     # User belongs to one organization
-                    st.write(f"🏢 {user_orgs[0].get('name', 'No Organization')}")
+                    st.write(f"{user_orgs[0].get('name', 'No Organization')}")
                 else:
                     # User has no organizations
-                    st.write("🏢 No Organization")
+                    st.write("No Organization")
                 
-                st.write(f"👔 Role: {user.get('role', 'user').title()}")
+                st.write(f"Role: {user.get('role', 'user').title()}")
                 
-                if st.button("🚪 Logout", use_container_width=True):
+                if st.button("Logout", use_container_width=True):
                     self.logout()
 
 
