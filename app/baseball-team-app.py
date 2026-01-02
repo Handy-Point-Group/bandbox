@@ -49,17 +49,28 @@ st.set_page_config(
 )
 
 # Custom CSS for button styling
-st.markdown("""
-<style>
+st.markdown(
+    """
+    <style>
     /* Make primary button text black instead of white */
-    .stButton > button[kind="primary"] {
-        color: black !important;
-    }
+    .stButton > button[kind="primary"],
     button[data-testid="baseButton-primary"] {
         color: black !important;
     }
-</style>
-""", unsafe_allow_html=True)
+
+    /* Form submit buttons */
+    .stFormSubmitButton > button {
+        color: black !important;
+    }
+
+    /* If the text is wrapped in <p> (common in forms) */
+    .stFormSubmitButton > button p {
+        color: black !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # Initialize authentication
 auth = get_auth_manager()
