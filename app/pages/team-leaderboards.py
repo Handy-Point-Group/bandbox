@@ -16,12 +16,19 @@ import sys
 sys.path.append('..')
 from utils import get_auth_manager, get_supabase_client, get_active_organization, get_active_team
 
+#%% Page Config
+st.set_page_config(
+    page_title="Bandbox - Team Leaderboards",
+    page_icon=r"app/images/bandbox.png",
+    layout="wide"
+)
+
 #%% Authentication Check
 auth = get_auth_manager()
 supabase_client = get_supabase_client()
 
 if not auth.check_authentication():
-    st.error("⚠️ You must be logged in to access this page.")
+    st.error("You must be logged in to access this page.")
     st.stop()
 
 current_user = auth.get_current_user()
@@ -31,7 +38,7 @@ current_org = get_active_organization() or auth.get_current_organization()
 active_team = get_active_team()
 
 if not current_org:
-    st.warning("⚠️ You are not currently part of an organization.")
+    st.warning("You are not currently part of an organization.")
     st.info("Contact your team administrator to be invited to an organization.")
     st.stop()
 

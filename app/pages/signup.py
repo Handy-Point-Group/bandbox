@@ -61,23 +61,23 @@ if email and '@' in email:
         
         # Show role info
         role_display = {
-            'admin-org': '🏢 Organization Administrator',
-            'admin': '👤 Team Admin',
-            'coach': '🧢 Coach',
-            'player': '⚾ Player'
+            'admin-org': 'Organization Administrator',
+            'admin': 'Team Admin',
+            'coach': 'Coach',
+            'player': 'Player'
         }.get(authorized_record['assigned_role'], authorized_record['assigned_role'])
         
-        st.info(f"📋 Your assigned role: **{role_display}**")
+        st.info(f"Your assigned role: **{role_display}**")
         
         if authorized_record.get('authorization_note'):
-            st.caption(f"📝 Note: {authorized_record['authorization_note']}")
+            st.caption(f"Note: {authorized_record['authorization_note']}")
         
         pre_authorized = True
         assigned_role = authorized_record['assigned_role']
         auth_record_id = authorized_record['id']
         selected_org_id = auth_org['id']
     else:
-        st.info("💡 No pre-authorization found. You can create an account and join an organization later when invited.")
+        st.info("No pre-authorization found. You can create an account and join an organization later when invited.")
 
 st.markdown("---")
 
@@ -115,17 +115,17 @@ with st.form("signup_form"):
         # Pre-authorized admin - show admin option
         account_type_options = ["Organization Admin"]
         account_type_index = 0
-        st.caption("✅ Your account type is set based on your pre-authorization.")
+        st.caption("Your account type is set based on your pre-authorization.")
     elif pre_authorized and assigned_role == 'coach':
         # Pre-authorized coach
         account_type_options = ["Coach"]
         account_type_index = 0
-        st.caption("✅ Your account type is set based on your pre-authorization.")
+        st.caption("Your account type is set based on your pre-authorization.")
     elif pre_authorized and assigned_role == 'player':
         # Pre-authorized player
         account_type_options = ["Player"]
         account_type_index = 0
-        st.caption("✅ Your account type is set based on your pre-authorization.")
+        st.caption("Your account type is set based on your pre-authorization.")
     else:
         # Not pre-authorized - allow Player or Coach selection
         account_type_options = ["Player", "Coach"]
@@ -194,16 +194,16 @@ with st.form("signup_form"):
                 )
     
     elif account_type == "Organization Admin":
-        st.info("🏢 As an Organization Admin, you'll be able to manage teams, players, and coaches for your organization.")
+        st.info("As an Organization Admin, you'll be able to manage teams, players, and coaches for your organization.")
     
     st.divider()
     
     # Show organization assignment if pre-authorized
     if pre_authorized and auth_org:
         st.subheader("Organization Assignment")
-        st.success(f"✅ You will be added to: **{auth_org.get('name', 'Unknown')}**")
+        st.success(f"You will be added to: **{auth_org.get('name', 'Unknown')}**")
     else:
-        st.caption("💡 You can be added to an organization later by an administrator.")
+        st.caption("You can be added to an organization later by an administrator.")
     
     st.divider()
     
@@ -433,10 +433,10 @@ with st.form("signup_form"):
                                     profile_created = True
                                 else:
                                     profile_created = False
-                                    st.warning("⚠️ Player profile could not be saved. You can update it later.")
+                                    st.warning("Player profile could not be saved. You can update it later.")
                             except Exception as e:
                                 profile_created = False
-                                st.warning(f"⚠️ Account created but player profile could not be saved: {str(e)}")
+                                st.warning(f"Account created but player profile could not be saved: {str(e)}")
                         
                         # If Coach account type, create coaches profile
                         elif account_type == "Coach":
@@ -488,16 +488,16 @@ with st.form("signup_form"):
                                     profile_created = True
                                 else:
                                     profile_created = False
-                                    st.warning("⚠️ Coach profile could not be saved. You can update it later.")
+                                    st.warning("Coach profile could not be saved. You can update it later.")
                             except Exception as e:
                                 profile_created = False
-                                st.warning(f"⚠️ Account created but coach profile could not be saved: {str(e)}")
+                                st.warning(f"Account created but coach profile could not be saved: {str(e)}")
                         
                         # Organization Admin - no profile needed, just show success
                         elif account_type == "Organization Admin":
                             profile_created = True
                         
-                        st.success("✅ Account created successfully!")
+                        st.success("Account created successfully!")
                         
                         # Show role and organization info
                         role_display = {
@@ -508,10 +508,10 @@ with st.form("signup_form"):
                         }.get(final_role, final_role)
                         
                         if final_role != 'player':
-                            st.success(f"🎉 You have been assigned the **{role_display}** role!")
+                            st.success(f"You have been assigned the **{role_display}** role!")
                         
                         if pre_authorized and selected_org_id:
-                            st.info(f"🏢 You have been added to the organization.")
+                            st.info(f"You have been added to the organization.")
                         
                         st.balloons()
                         
@@ -520,12 +520,12 @@ with st.form("signup_form"):
                         login_success = auth.login_with_password(email, password)
                         
                         if login_success:
-                            st.success("🎉 You're now logged in! Redirecting to dashboard...")
+                            st.success("You're now logged in! Redirecting to dashboard...")
                             time.sleep(1)
                             st.rerun()
                         else:
                             # Fallback - redirect to login page
-                            st.info("💡 Please log in with your new credentials.")
+                            st.info("Please log in with your new credentials.")
                             time.sleep(2)
                             st.rerun()
                     else:

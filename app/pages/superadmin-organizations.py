@@ -12,11 +12,10 @@ from utils import (
     get_current_user
 )
 
-#%% Page Configuration
-
+#%% Page Config
 st.set_page_config(
-    page_title="Superadmin - Organizations",
-    page_icon="🏢",
+    page_title="Bandbox - Admin Dashboard",
+    page_icon=r"app/images/bandbox.png",
     layout="wide"
 )
 
@@ -29,20 +28,20 @@ require_auth()
 # Check for superadmin role
 current_user = get_current_user()
 if not current_user or current_user.get('role') != 'superadmin':
-    st.error("🚫 Access Denied: This page is only accessible to superadmins.")
+    st.error("Access Denied: This page is only accessible to superadmins.")
     st.stop()
 
 supabase = get_supabase_client()
 
 #%% Page Title
 
-st.title("🏢 Superadmin - Organization Management")
+st.title("Superadmin - Organization Management")
 st.markdown("Create and manage organizations across the entire platform")
 st.markdown("---")
 
 #%% Tabs
 
-tab1, tab2 = st.tabs(["➕ Create Organization", "📋 View All Organizations"])
+tab1, tab2 = st.tabs(["Create Organization", "View All Organizations"])
 
 #%% Tab 1: Create Organization
 
@@ -58,8 +57,8 @@ with tab1:
         "Category *",
         options=['competitive', 'training'],
         format_func=lambda x: {
-            'competitive': '🏆 Competitive - Teams that compete (Travel, High School, College, etc.)',
-            'training': '🎯 Training - Facilities, trainers, scouts (no team rosters)'
+            'competitive': 'Competitive - Teams that compete (Travel, High School, College, etc.)',
+            'training': 'Training - Facilities, trainers, scouts (no team rosters)'
         }[x],
         horizontal=True,
         help="Competitive organizations have teams and rosters. Training organizations focus on individual development."
@@ -74,10 +73,10 @@ with tab1:
             "Type *",
             options=['facility', 'personal_trainer', 'scouting', 'other'],
             format_func=lambda x: {
-                'facility': '🏟️ Facility - Training facility, indoor cage, etc.',
-                'personal_trainer': '👤 Personal Trainer - Individual coaching/instruction',
-                'scouting': '🔍 Scouting - Scouting service or organization',
-                'other': '📋 Other Training Organization'
+                'facility': 'Facility - Training facility, indoor cage, etc.',
+                'personal_trainer': 'Personal Trainer - Individual coaching/instruction',
+                'scouting': 'Scouting - Scouting service or organization',
+                'other': 'Other Training Organization'
             }[x]
         )
         has_teams = False
@@ -88,16 +87,16 @@ with tab1:
             "Type *",
             options=['travel', 'high_school', 'college_d1', 'college_d2', 'college_d3', 'juco', 'summer_league', 'youth', 'independent', 'other'],
             format_func=lambda x: {
-                'travel': '🚌 Travel Ball - Club/travel team organization',
-                'high_school': '🎓 High School - Varsity, JV, or freshman program',
-                'college_d1': '🏛️ College D1 - NCAA Division 1',
-                'college_d2': '🏛️ College D2 - NCAA Division 2',
-                'college_d3': '🏛️ College D3 - NCAA Division 3',
-                'juco': '📚 JUCO - Junior/Community College',
-                'summer_league': '☀️ Summer League - Summer collegiate or showcase',
-                'youth': '⚾ Youth - Little League, Cal Ripken, etc.',
-                'independent': '🎯 Independent - Indy ball or unaffiliated',
-                'other': '📋 Other Competitive Organization'
+                'travel': 'Travel Ball - Club/travel team organization',
+                'high_school': 'High School - Varsity, JV, or freshman program',
+                'college_d1': 'College D1 - NCAA Division 1',
+                'college_d2': 'College D2 - NCAA Division 2',
+                'college_d3': 'College D3 - NCAA Division 3',
+                'juco': 'JUCO - Junior/Community College',
+                'summer_league': 'Summer League - Summer collegiate or showcase',
+                'youth': 'Youth - Little League, Cal Ripken, etc.',
+                'independent': 'Independent - Indy ball or unaffiliated',
+                'other': 'Other Competitive Organization'
             }[x]
         )
         has_teams = True
@@ -247,7 +246,7 @@ with tab1:
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             submit_button = st.form_submit_button(
-                "✅ Create Organization & Send Invite",
+                "Create Organization & Send Invite",
                 use_container_width=True,
                 type="primary"
             )
@@ -262,7 +261,7 @@ with tab1:
             
             if errors:
                 for error in errors:
-                    st.error(f"❌ {error}")
+                    st.error(f"{error}")
             else:
                 # Prepare organization data
                 org_data = {
@@ -292,7 +291,7 @@ with tab1:
                 # Check if organization already exists
                 existing_orgs = supabase.get_all_organizations()
                 if any(org['name'].lower() == name.lower() for org in existing_orgs):
-                    st.error(f"❌ Organization '{name}' already exists")
+                    st.error(f"Organization '{name}' already exists")
                 else:
                     # Create organization
                     try:
@@ -313,18 +312,18 @@ with tab1:
                                 )
                                 
                                 if auth_user:
-                                    st.success(f"✅ Admin '{admin_email}' has been authorized!")
-                                    st.info(f"📧 {admin_email} can now sign up at the signup page and will automatically be assigned as organization admin.")
+                                    st.success(f"Admin '{admin_email}' has been authorized!")
+                                    st.info(f"{admin_email} can now sign up at the signup page and will automatically be assigned as organization admin.")
                                 else:
-                                    st.warning("⚠️ Organization created but failed to authorize admin user.")
+                                    st.warning("Organization created but failed to authorize admin user.")
                             except Exception as admin_error:
-                                st.warning(f"⚠️ Organization created but error authorizing admin: {str(admin_error)}")
+                                st.warning(f"Organization created but error authorizing admin: {str(admin_error)}")
                             
                             st.balloons()
                             
                             # Summary
                             st.markdown("---")
-                            st.markdown("### ✅ Created Successfully!")
+                            st.markdown("### Created Successfully!")
                             summary_col1, summary_col2 = st.columns(2)
                             with summary_col1:
                                 st.markdown(f"**Organization:** {name}")
@@ -334,12 +333,12 @@ with tab1:
                                 st.markdown(f"**Admin:** {admin_email}")
                                 st.markdown(f"**Has Teams:** {'Yes' if has_teams else 'No'}")
                             
-                            with st.expander("📋 View Full Details"):
+                            with st.expander("View Full Details"):
                                 st.json(created_org)
                         else:
-                            st.error("❌ Failed to create organization. Please check the logs.")
+                            st.error("Failed to create organization. Please check the logs.")
                     except Exception as e:
-                        st.error(f"❌ Error creating organization: {str(e)}")
+                        st.error(f"Error creating organization: {str(e)}")
 
 #%% Tab 2: View Organizations
 
@@ -359,8 +358,8 @@ with tab2:
                 options=['All', 'competitive', 'training'],
                 format_func=lambda x: {
                     'All': 'All Categories',
-                    'competitive': '🏆 Competitive',
-                    'training': '🎯 Training'
+                    'competitive': 'Competitive',
+                    'training': 'Training'
                 }.get(x, x)
             )
         
@@ -434,7 +433,7 @@ with tab2:
             # Format category and subtype for display
             if 'org_category' in org_df.columns:
                 org_df['org_category'] = org_df['org_category'].apply(
-                    lambda x: '🏆 Competitive' if x == 'competitive' else ('🎯 Training' if x == 'training' else x)
+                    lambda x: 'Competitive' if x == 'competitive' else ('Training' if x == 'training' else x)
                 )
             if 'org_subtype' in org_df.columns:
                 org_df['org_subtype'] = org_df['org_subtype'].apply(
@@ -467,12 +466,12 @@ with tab2:
                     st.write(f"**Name:** {selected_org.get('name', 'N/A')}")
                     st.write(f"**Display Name:** {selected_org.get('display_name', 'N/A')}")
                     category = selected_org.get('org_category', 'N/A')
-                    category_display = '🏆 Competitive' if category == 'competitive' else ('🎯 Training' if category == 'training' else category)
+                    category_display = 'Competitive' if category == 'competitive' else ('Training' if category == 'training' else category)
                     st.write(f"**Category:** {category_display}")
                     subtype = selected_org.get('org_subtype', 'N/A')
                     st.write(f"**Type:** {subtype.replace('_', ' ').title() if subtype else 'N/A'}")
                     st.write(f"**Has Teams:** {'Yes' if selected_org.get('has_teams') else 'No'}")
-                    st.write(f"**Status:** {'✅ Active' if selected_org.get('is_active') else '❌ Inactive'}")
+                    st.write(f"**Status:** {'Active' if selected_org.get('is_active') else 'Inactive'}")
                     st.write(f"**Description:** {selected_org.get('description', 'N/A')}")
                     
                     st.markdown("#### Contact Information")
@@ -519,9 +518,3 @@ with tab2:
             st.info("No organizations match your filters")
     else:
         st.info("No organizations found")
-
-#%% Footer
-
-st.markdown("---")
-st.caption(f"Logged in as: {current_user.get('email', 'Unknown')} | Role: Superadmin")
-

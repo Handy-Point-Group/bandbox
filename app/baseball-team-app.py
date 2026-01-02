@@ -96,9 +96,6 @@ auth.display_user_info()
 current_user = auth.get_current_user()
 user_role = current_user.get('role', 'player') if current_user else 'player'
 
-# Debug: Show current role in sidebar
-st.sidebar.caption(f"🔑 Role: {user_role}")
-
 # Render org/team switcher for players and coaches
 supabase = get_supabase_client()
 if current_user:

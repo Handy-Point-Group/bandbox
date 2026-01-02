@@ -14,6 +14,13 @@ from matplotlib.ticker import MultipleLocator
 from matplotlib.patches import Ellipse
 from dateutil.relativedelta import relativedelta
 
+#%% Page Config
+st.set_page_config(
+    page_title="Bandbox - Video Upload",
+    page_icon=r"app/images/bandbox.png",
+    layout="wide"
+)
+
 #%% Connect to Supabase
 db = st.connection("supabase",type=SupabaseConnection)
 
