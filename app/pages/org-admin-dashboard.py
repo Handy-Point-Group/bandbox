@@ -54,7 +54,7 @@ if not user_org:
 
 #%% Page Title
 
-st.title(f"🏢 {user_org.get('display_name', user_org.get('name', 'Organization'))} Dashboard")
+st.title(f"{user_org.get('display_name', user_org.get('name', 'Organization'))} Dashboard")
 org_category = user_org.get('org_category', 'competitive')
 org_subtype = user_org.get('org_subtype', '')
 has_teams = user_org.get('has_teams', True)
