@@ -794,51 +794,53 @@ with pitching:
             filtered_data = pitch_types_by_date[
                 pitch_types_by_date['Pitch Type'].isin(pitch_filter)
             ]
+            if len(filtered_data) <= 1:
+                st.warning("***Warning***: In order to view timelines, you need at least two sessions worth of data. Please adjust your dates, or come back when you have more data.")
+            else:
+                # Create figure
+                fig_vel, ax_vel = plt.subplots(figsize=(10, 4))
+                fig_vel.patch.set_facecolor("#000000")
+                ax_vel.set_facecolor("#000000")
 
-            # Create figure
-            fig_vel, ax_vel = plt.subplots(figsize=(10, 4))
-            fig_vel.patch.set_facecolor("#000000")
-            ax_vel.set_facecolor("#000000")
+                # Plot per pitch type with colors & ± std error bars
+                for pitch in pitch_filter:
+                    subset = filtered_data[filtered_data['Pitch Type'] == pitch]
 
-            # Plot per pitch type with colors & ± std error bars
-            for pitch in pitch_filter:
-                subset = filtered_data[filtered_data['Pitch Type'] == pitch]
+                    ax_vel.errorbar(
+                        subset['Date'],
+                        subset['Velocity_mean'],
+                        yerr=subset['Velocity_std'],    # 1 standard deviation
+                        fmt='o-',                       # circle markers + line
+                        markersize=6,
+                        linewidth=2,
+                        label=pitch,
+                        color=subset['color'].iloc[0],  # use mapped color
+                        ecolor=subset['color'].iloc[0], # error bar color
+                        capsize=4,
+                        elinewidth=1.5,
+                        zorder=3
+                    )
 
-                ax_vel.errorbar(
-                    subset['Date'],
-                    subset['Velocity_mean'],
-                    yerr=subset['Velocity_std'],    # 1 standard deviation
-                    fmt='o-',                       # circle markers + line
-                    markersize=6,
-                    linewidth=2,
-                    label=pitch,
-                    color=subset['color'].iloc[0],  # use mapped color
-                    ecolor=subset['color'].iloc[0], # error bar color
-                    capsize=4,
-                    elinewidth=1.5,
-                    zorder=3
-                )
+                # Axes formatting
+                ax_vel.set_xlim(filtered_data['Date'].min(), filtered_data['Date'].max())
+                ax_vel.set_ylim(60, 95)
 
-            # Axes formatting
-            ax_vel.set_xlim(filtered_data['Date'].min(), filtered_data['Date'].max())
-            ax_vel.set_ylim(60, 95)
+                ax_vel.set_xlabel("Date", color='white', fontsize=14)
+                ax_vel.set_ylabel("Velocity (mph)", color='white', fontsize=14)
 
-            ax_vel.set_xlabel("Date", color='white', fontsize=14)
-            ax_vel.set_ylabel("Velocity (mph)", color='white', fontsize=14)
+                # Grid & ticks
+                ax_vel.grid(True, linestyle='--', alpha=0.3)
+                ax_vel.tick_params(colors='white')
 
-            # Grid & ticks
-            ax_vel.grid(True, linestyle='--', alpha=0.3)
-            ax_vel.tick_params(colors='white')
+                # Spine styling
+                for spine in ax_vel.spines.values():
+                    spine.set_color('white')
 
-            # Spine styling
-            for spine in ax_vel.spines.values():
-                spine.set_color('white')
+                # Legend styling
+                ax_vel.legend(facecolor="#000e29", edgecolor="white", labelcolor="white")
 
-            # Legend styling
-            ax_vel.legend(facecolor="#000e29", edgecolor="white", labelcolor="white")
-
-            # Display in Streamlit
-            st.pyplot(fig_vel)
+                # Display in Streamlit
+                st.pyplot(fig_vel)
         
         #%% Pitching Video
         with pitching_videos:
