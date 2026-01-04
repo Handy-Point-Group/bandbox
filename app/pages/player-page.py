@@ -595,7 +595,7 @@ with hitting:
                 ax1.legend(
                     lines_1 + lines_2,
                     labels_1 + labels_2,
-                    facecolor="#000e29", 
+                    facecolor="#000000", 
                     edgecolor="white",
                     labelcolor="white"
                 )
@@ -837,7 +837,7 @@ with pitching:
                     spine.set_color('white')
 
                 # Legend styling
-                ax_vel.legend(facecolor="#000e29", edgecolor="white", labelcolor="white")
+                ax_vel.legend(facecolor="#000000", edgecolor="white", labelcolor="white")
 
                 # Display in Streamlit
                 st.pyplot(fig_vel)
