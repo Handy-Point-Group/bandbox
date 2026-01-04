@@ -25,7 +25,7 @@ signup_page = st.Page("pages/signup.py", title="Sign Up", icon=":material/person
 # Main player pages
 player_onboarding = st.Page("pages/player-onboarding.py", title="Player Form", icon=":material/waving_hand:")
 player_page = st.Page("pages/player-page.py",title="Player Summary",icon=":material/bar_chart:")
-data_center = st.Page("pages/data-input.py",title="Data Center",icon=":material/upload:")
+data_center = st.Page("pages/data-center.py",title="Data Center",icon=":material/upload:")
 
 # Main team pages (require organization)
 roster = st.Page("pages/roster-page.py",title="Home",icon=":material/light_mode:")
