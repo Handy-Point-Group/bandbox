@@ -67,6 +67,11 @@ st.markdown(
     .stFormSubmitButton > button p {
         color: black !important;
     }
+
+    /* Multiselect text black instead of white */
+    .stMultiSelect [data-baseweb="tag"] span {
+        color: black !important;
+    }
     </style>
     """,
     unsafe_allow_html=True
