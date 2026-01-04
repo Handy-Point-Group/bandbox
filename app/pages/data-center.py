@@ -133,7 +133,7 @@ player_options = players_show['full_name'].to_dict()
 pitch_type_options = {
     "Four Seam",
     "Two Seam",
-    "Cutter"
+    "Cutter",
     "Changeup",
     "Splitter",
     "Curveball",
