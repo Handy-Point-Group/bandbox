@@ -528,8 +528,8 @@ with hitting:
                 mean_col, std_col, pct_col = metric_map[metric_select]
 
                 fig, ax1 = plt.subplots(figsize=(10, 4))
-                fig.patch.set_facecolor("#000e29")
-                ax1.set_facecolor("#000e29")
+                fig.patch.set_facecolor("#000000")
+                ax1.set_facecolor("#000000")
 
                 # Primary axis: mean + std
                 ax1.plot(
@@ -628,8 +628,8 @@ with pitching:
 
                 # Plot
                 fig, ax = plt.subplots(figsize=(8, 8))
-                fig.patch.set_facecolor("#000e29")
-                ax.set_facecolor("#000e29")
+                fig.patch.set_facecolor("#000000")
+                ax.set_facecolor("#000000")
 
                 # Scatter plot
                 ax.scatter(
@@ -739,8 +739,8 @@ with pitching:
                 st.subheader("Release Data by Pitch Type", divider = "yellow")    
                 # Create figure
                 fig_release, ax_release = plt.subplots(figsize=(8, 3))
-                fig_release.patch.set_facecolor("#000e29")
-                ax_release.set_facecolor("#000e29")
+                fig_release.patch.set_facecolor("#000000")
+                ax_release.set_facecolor("#000000")
 
                 # Scatter plot: X = Release Side, Y = Release Height
                 ax_release.scatter(
@@ -797,8 +797,8 @@ with pitching:
 
             # Create figure
             fig_vel, ax_vel = plt.subplots(figsize=(10, 4))
-            fig_vel.patch.set_facecolor("#000e29")
-            ax_vel.set_facecolor("#000e29")
+            fig_vel.patch.set_facecolor("#000000")
+            ax_vel.set_facecolor("#000000")
 
             # Plot per pitch type with colors & ± std error bars
             for pitch in pitch_filter:
