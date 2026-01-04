@@ -31,6 +31,8 @@ st.set_page_config(
     layout="wide"
 )
 
+#%% Title
+
 st.title("User Management")
 st.markdown("---")
 

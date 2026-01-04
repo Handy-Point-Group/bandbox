@@ -12,20 +12,6 @@ from utils import get_auth_manager, get_supabase_client
 
 st.set_page_config(page_title="Bandbox - Player Onboarding", page_icon=r"app/images/bandbox.png", layout="wide")
 
-# Custom CSS for button styling
-st.markdown("""
-<style>
-    /* Make primary button text black instead of white */
-    .stButton > button[kind="primary"] {
-        color: black !important;
-    }
-    button[data-testid="baseButton-primary"] {
-        color: black !important;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-
 #%% Authentication Check
 auth = get_auth_manager()
 supabase_client = get_supabase_client()
