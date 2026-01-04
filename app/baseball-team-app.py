@@ -25,7 +25,7 @@ signup_page = st.Page("pages/signup.py", title="Sign Up", icon=":material/person
 # Main player pages
 player_onboarding = st.Page("pages/player-onboarding.py", title="Player Form", icon=":material/waving_hand:")
 player_page = st.Page("pages/player-page.py",title="Player Summary",icon=":material/bar_chart:")
-data_input = st.Page("pages/data-input.py",title="Data Upload",icon=":material/upload:")
+data_center = st.Page("pages/data-input.py",title="Data Center",icon=":material/upload:")
 
 # Main team pages (require organization)
 roster = st.Page("pages/roster-page.py",title="Home",icon=":material/light_mode:")
@@ -121,7 +121,7 @@ current_org = active_org or auth.get_current_organization()
 pages = []
 
 # Personal pages available to ALL users (with or without organization)
-personal_pages = [player_onboarding, player_page, data_input]
+personal_pages = [player_onboarding, player_page, data_center]
 
 # If user has an organization, show team pages
 if current_org:
@@ -129,7 +129,7 @@ if current_org:
         roster,
         team_leaderboards,
         player_page,
-        data_input,
+        data_center,
         plate_discipline_tracking,
         player_onboarding  # Add at the end for users with org
     ]
