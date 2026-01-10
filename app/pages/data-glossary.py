@@ -59,12 +59,27 @@ glossary = fetch_table_data('glossary')
 #%% Page
 
 st.title("Bandbox Glossary")
-st.subheader("Read up on all the data you see")
-st.divider(width="stretch")
-
+st.markdown("/Read up on all the data you see/")
+st.html(
+    '''
+    <style>
+    hr {
+        border-color: yellow;
+    }
+    </style>
+    '''
+)
 #%% Hitting Glossary Display
 st.header("Hitting Data")
-st.divider(width="stretch")
+st.html(
+    '''
+    <style>
+    hr {
+        border-color: yellow;
+    }
+    </style>
+    '''
+)
 
 # Filter to Hitting only
 hitting_glossary = glossary[glossary['type'] == 'Hitting']
@@ -94,7 +109,15 @@ for level in hitting_levels:
 
 #%% Pitching Glossary Display
 st.header("Pitching Data")
-st.divider(width="stretch")
+st.html(
+    '''
+    <style>
+    hr {
+        border-color: yellow;
+    }
+    </style>
+    '''
+)
 
 # Filter to Pitching only
 pitching_glossary = glossary[glossary['type'] == 'Pitching']
