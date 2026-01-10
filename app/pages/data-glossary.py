@@ -59,7 +59,7 @@ glossary = fetch_table_data('glossary')
 #%% Page
 
 st.title("Bandbox Glossary")
-st.markdown("/Read up on all the data you see/")
+st.markdown("_Read up on all the data you see throughout the app_")
 st.html(
     '''
     <style>
@@ -79,8 +79,7 @@ hitting_glossary = glossary[glossary['type'] == 'Hitting']
 hitting_levels = hitting_glossary['level'].dropna().unique()
 
 for level in hitting_levels:
-    st.subheader(level)
-    st.divider(width="stretch")
+    st.subheader(level, divider="yellow")
 
     level_df = hitting_glossary[hitting_glossary['level'] == level]
 
@@ -108,8 +107,7 @@ pitching_glossary = glossary[glossary['type'] == 'Pitching']
 pitching_levels = pitching_glossary['level'].dropna().unique()
 
 for level in pitching_levels:
-    st.subheader(level)
-    st.divider(width="stretch")
+    st.subheader(level, divider="yellow")
 
     level_df = pitching_glossary[pitching_glossary['level'] == level]
 
