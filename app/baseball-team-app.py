@@ -26,6 +26,7 @@ signup_page = st.Page("pages/signup.py", title="Sign Up", icon=":material/person
 player_onboarding = st.Page("pages/player-onboarding.py", title="Player Form", icon=":material/waving_hand:")
 player_page = st.Page("pages/player-page.py",title="Player Summary",icon=":material/bar_chart:")
 data_center = st.Page("pages/data-center.py",title="Data Center",icon=":material/upload:")
+glossary = st.Page("pages/data-glossary.py",title="Data Glossary",icon=":material/dictionary:")
 
 # Main team pages (require organization)
 roster = st.Page("pages/roster-page.py",title="Home",icon=":material/light_mode:")
@@ -136,7 +137,8 @@ if current_org:
         player_page,
         data_center,
         plate_discipline_tracking,
-        player_onboarding  # Add at the end for users with org
+        player_onboarding,
+        glossary  # Add at the end for users with org
     ]
 else:
     # User without organization - show only personal pages

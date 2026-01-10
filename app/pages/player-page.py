@@ -133,7 +133,7 @@ st.title('Player Summary Page')
 # Determine player selection based on organization status
 if not current_org:
     # User without organization - show only their own data
-    st.info("👤 Viewing your personal player profile")
+    st.info("Viewing your personal player profile")
     
     # Try to find player record linked to user
     # Check if players table has 'user_id' field to link to users table
