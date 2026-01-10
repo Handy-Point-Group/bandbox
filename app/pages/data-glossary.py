@@ -70,16 +70,7 @@ st.html(
     '''
 )
 #%% Hitting Glossary Display
-st.header("Hitting Data")
-st.html(
-    '''
-    <style>
-    hr {
-        border-color: yellow;
-    }
-    </style>
-    '''
-)
+st.header("Hitting Data", divider="yellow")
 
 # Filter to Hitting only
 hitting_glossary = glossary[glossary['type'] == 'Hitting']
@@ -108,16 +99,7 @@ for level in hitting_levels:
                 st.markdown(row['paragraph_definition'])
 
 #%% Pitching Glossary Display
-st.header("Pitching Data")
-st.html(
-    '''
-    <style>
-    hr {
-        border-color: yellow;
-    }
-    </style>
-    '''
-)
+st.header("Pitching Data", divider="yellow")
 
 # Filter to Pitching only
 pitching_glossary = glossary[glossary['type'] == 'Pitching']
