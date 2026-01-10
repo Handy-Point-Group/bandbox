@@ -1,7 +1,4 @@
--- Create Glossary Terms Table
--- Run in Supabase SQL Editor
-
-CREATE TABLE IF NOT EXISTS public.glossary (
+CREATE TABLE public.glossary (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     -- Core identifiers
@@ -9,6 +6,8 @@ CREATE TABLE IF NOT EXISTS public.glossary (
     term TEXT NOT NULL,
 
     -- Metadata
+    type TEXT,
+    level TEXT,
     unit TEXT,
     source_table TEXT,
 
