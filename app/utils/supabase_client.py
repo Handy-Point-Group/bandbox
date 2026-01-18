@@ -48,31 +48,15 @@ class SupabaseClient:
             logger.error(f"Error fetching user by email: {e}")
             return None
     
-    def get_user_by_google_id(self, google_id: str) -> Optional[Dict[str, Any]]:
-        """
-        Retrieve user information by Google ID
-        
-        Args:
-            google_id: User's Google ID
-            
-        Returns:
-            User data dictionary or None if not found
-        """
-        try:
-            response = self.client.from_("users").select("*").eq("google_id", google_id).execute()
-            if response.data and len(response.data) > 0:
-                return response.data[0]
-            return None
-        except Exception as e:
-            logger.error(f"Error fetching user by Google ID: {e}")
-            return None
     
     def create_user(
         self, 
         email: str, 
-        full_name: str, 
+        full_name: str,
+        ## START ORG REFERENCE ##
         organization_id: str,
-        google_id: Optional[str] = None,
+        ## END ORG REFERENCE ##
+        ## BELOW NEEDS TO BE PLAYER OR COACH ##
         role: str = "user"
     ) -> Optional[Dict[str, Any]]:
         """
@@ -82,7 +66,6 @@ class SupabaseClient:
             email: User's email address
             full_name: User's full name
             organization_id: UUID of the organization
-            google_id: User's Google ID (optional)
             role: User's role (default: 'user')
             
         Returns:
@@ -92,8 +75,9 @@ class SupabaseClient:
             user_data = {
                 "email": email,
                 "full_name": full_name,
+                ## START ORG REFERENCE ##
                 "primary_organization_id": organization_id,
-                "google_id": google_id,
+                ## END ORG REFERENCE ##
                 "role": role,
                 "is_active": True
             }
@@ -184,6 +168,7 @@ class SupabaseClient:
             logger.error(f"Error activating user: {e}")
             return False
     
+    ## START ORG REFERENCE ##
     # ==================== Organization Operations ====================
     
     def get_organization(self, organization_id: str) -> Optional[Dict[str, Any]]:
@@ -270,9 +255,11 @@ class SupabaseClient:
         except Exception as e:
             logger.error(f"Error creating organization: {e}")
             return None
-    
+    ## END ORG REFERENCE ##
+
     # ==================== User List Operations ====================
     
+    ## START ORG REFERENCE (NEEDS TO QUERY A DIFFERENT TABLE) ##
     def get_users_by_organization(self, organization_id: str) -> List[Dict[str, Any]]:
         """
         Get all users in an organization
@@ -303,9 +290,10 @@ class SupabaseClient:
         except Exception as e:
             logger.error(f"Error fetching all users: {e}")
             return []
-    
+    ## END ORG REFERENCE ##
     # ==================== Authorized Users Operations ====================
     
+    ## START RENAME (AUTH_USER to INVITES or JT_USER_ORGANIZATION) ##
     def add_authorized_user(
         self,
         email: str,
@@ -349,7 +337,7 @@ class SupabaseClient:
         except Exception as e:
             logger.error(f"Error adding authorized user: {e}")
             return None
-    
+
     def get_authorized_users_by_organization(self, organization_id: str) -> List[Dict[str, Any]]:
         """
         Get all authorized users for an organization
@@ -436,7 +424,8 @@ class SupabaseClient:
         except Exception as e:
             logger.error(f"Error marking user as signed up: {e}")
             return False
-    
+
+    ## FUNCTION CHANGE: THIS APPEARS TO BE REFERENCING THE STRING VERSION OF ORG; SHOULD BE USING RENAMED JOIN TABLE ##
     def remove_authorized_user(self, authorized_user_id: str) -> bool:
         """
         Remove an authorized user (or mark as inactive)
@@ -553,6 +542,8 @@ class SupabaseClient:
             logger.error(f"Error removing user from organization: {e}")
             return False
     
+    ## END RENAME (AUTH_USER to INVITES or JT_USER_ORGANIZATION) ##
+
     # ==================== Permission Operations ====================
     
     def get_user_permissions(self, user_id: str) -> List[str]:

@@ -1,6 +1,6 @@
 """
 Authentication Module
-Handles Google OIDC authentication + Email/Password authentication + Supabase user validation
+Email/Password authentication + Supabase user validation
 """
 
 import streamlit as st
@@ -32,8 +32,6 @@ class AuthManager:
             st.session_state.organization_data = None
         if 'permissions' not in st.session_state:
             st.session_state.permissions = []
-        if 'auth_method' not in st.session_state:
-            st.session_state.auth_method = None  # 'google' or 'password'
         if 'selected_organization_id' not in st.session_state:
             st.session_state.selected_organization_id = None
         if 'user_organizations' not in st.session_state:
@@ -52,29 +50,16 @@ class AuthManager:
         # First check if already authenticated in session (password-based auth)
         if st.session_state.get('authenticated', False) and st.session_state.get('user_data'):
             return True
-        
-        # Try to check Google OIDC authentication
-        try:
-            # Check if user is logged in via Google OIDC
-            if hasattr(st, 'user') and hasattr(st.user, 'is_logged_in') and st.user.is_logged_in:
-                # Validate user against Supabase database
-                user_email = st.user.email
-                google_id = st.user.sub  # Google's unique user ID
-                return self._validate_user(user_email, google_id)
-        except (AttributeError, Exception) as e:
-            # st.user not configured or not available, that's ok
-            logger.debug(f"Google OIDC not available: {e}")
-        
+                
         # Not authenticated via any method
         return False
     
-    def _validate_user(self, email: str, google_id: str) -> bool:
+    def _validate_user(self, email: str) -> bool:
         """
         Validate user exists in Supabase and is active
         
         Args:
-            email: User's email from Google
-            google_id: User's Google ID
+            email: User's email
             
         Returns:
             True if user is valid and active, False otherwise
@@ -96,14 +81,7 @@ class AuthManager:
                 st.session_state.authenticated = False
                 st.session_state.user_data = None
                 return False
-            
-            # Update Google ID if not set
-            if not user.get('google_id') and google_id:
-                self.supabase.client.from_("users").update(
-                    {"google_id": google_id}
-                ).eq("id", user['id']).execute()
-                user['google_id'] = google_id
-            
+                        
             # Update last login
             self.supabase.update_user_last_login(user['id'])
             
@@ -138,7 +116,7 @@ class AuthManager:
             st.session_state.user_data = None
             return False
     
-    def require_auth(self, provider: str = None):
+    def require_auth(self):
         """
         Require authentication - redirect to login if not authenticated
         
@@ -146,16 +124,12 @@ class AuthManager:
             provider: OIDC provider name (e.g., 'google'). If None, uses default config
         """
         if not self.check_authentication():
-            st.warning("⚠️ You must be logged in and have a valid account to access this application.")
+            st.warning("You must be logged in and have a valid account to access this application.")
             
             col1, col2, col3 = st.columns([1, 1, 1])
             with col2:
-                if provider:
-                    if st.button("Log in with Google", use_container_width=True):
-                        st.login(provider)
-                else:
-                    if st.button("Log in with Google", use_container_width=True):
-                        st.login()
+                if st.button("Log in", use_container_width=True):
+                    st.login()
             
             st.stop()
     
@@ -218,6 +192,7 @@ class AuthManager:
         self._initialize_session_state()
         return st.session_state.get('user_data') if st.session_state.get('authenticated', False) else None
     
+    ## START ORG REFERENCE ##
     def get_current_organization(self) -> Optional[Dict[str, Any]]:
         """
         Get current user's selected organization data
@@ -235,7 +210,9 @@ class AuthManager:
         
         # Otherwise return the primary org
         return st.session_state.get('organization_data')
-    
+    ## END ORG REFERENCE ##
+
+    ## START ORG REFERENCE ##
     def get_user_organizations(self) -> List[Dict[str, Any]]:
         """
         Get all organizations the user belongs to
@@ -267,7 +244,9 @@ class AuthManager:
                     orgs.append(org)
         
         return orgs
-    
+    ## END ORG REFERENCE ##
+
+    ## START ORG REFERENCE ##
     def switch_organization(self, organization_id: str):
         """
         Switch to a different organization
@@ -289,7 +268,9 @@ class AuthManager:
             st.session_state.selected_organization_id = organization_id
             st.session_state.organization_data = self.supabase.get_organization(organization_id)
             st.rerun()
-    
+    ## END ORG REFERENCE ##
+
+    ## START ORG REFERENCE ##
     def has_role(self, required_role: str) -> bool:
         """
         Check if current user has a specific role

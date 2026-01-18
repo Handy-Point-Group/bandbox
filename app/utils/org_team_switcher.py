@@ -7,6 +7,7 @@ Provides sidebar UI for switching between organizations and teams.
 import streamlit as st
 from typing import Optional, List, Dict, Any
 
+## START ORG REFERENCE ##
 def get_user_organizations(supabase, user_id: str, user_email: str) -> List[Dict[str, Any]]:
     """
     Get all organizations a user has access to.
@@ -62,7 +63,7 @@ def get_user_organizations(supabase, user_id: str, user_email: str) -> List[Dict
         st.error(f"Error fetching organizations: {e}")
     
     return orgs
-
+## END ORG REFERENCE ##
 
 def get_user_teams(supabase, user_id: str, user_email: str, organization_id: Optional[str] = None) -> List[Dict[str, Any]]:
     """
@@ -166,7 +167,7 @@ def init_org_team_session():
     if 'user_teams' not in st.session_state:
         st.session_state.user_teams = []
 
-
+## START ORG REFERENCE ##
 def render_org_team_switcher(supabase, current_user: Dict[str, Any]):
     """
     Render the organization and team switcher in the sidebar.
@@ -288,27 +289,32 @@ def render_org_team_switcher(supabase, current_user: Dict[str, Any]):
                     st.sidebar.caption(f"📋 {role_in_team.replace('_', ' ').title()}")
     
     return active_org, active_team
+## END ORG REFERENCE ##
 
-
+## START ORG REFERENCE ##
 def get_active_organization() -> Optional[Dict[str, Any]]:
     """Get the currently active organization from session state"""
     init_org_team_session()
     return st.session_state.active_organization
+## END ORG REFERENCE ##
 
-
+## START ORG REFERENCE ##
 def get_active_team() -> Optional[Dict[str, Any]]:
     """Get the currently active team from session state"""
     init_org_team_session()
     return st.session_state.active_team
+## END ORG REFERENCE ##
 
-
+## START ORG REFERENCE ##
 def get_active_organization_id() -> Optional[str]:
     """Get the currently active organization ID from session state"""
     init_org_team_session()
     return st.session_state.active_organization_id
+## END ORG REFERENCE ##
 
-
+## START ORG REFERENCE ##
 def get_active_team_id() -> Optional[str]:
     """Get the currently active team ID from session state"""
     init_org_team_session()
     return st.session_state.active_team_id
+## END ORG REFERENCE ##
