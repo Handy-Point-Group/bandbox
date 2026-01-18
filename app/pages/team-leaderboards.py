@@ -44,7 +44,7 @@ if not current_org:
 
 # Show active team context if selected
 if active_team:
-    st.sidebar.success(f"📍 Viewing: {active_team.get('name', 'Team')}")
+    st.sidebar.success(f"Viewing: {active_team.get('name', 'Team')}")
 
 #%% Connect to Supabase
 db = st.connection("supabase",type=SupabaseConnection)
@@ -201,6 +201,9 @@ dkhit_group = dkhit.groupby('player_id').agg(
     impact_momentum_avg=('impact_momentum', 'mean'),
     impact_momentum_std=('impact_momentum', 'std'),
 
+    trigger_to_impact_avg=('trigger_to_impact', 'mean'),
+    trigger_to_impact_std=('trigger_to_impact', 'std'),
+
     hand_cast_avg=('hand_cast', 'mean'),
     hand_cast_std=('hand_cast', 'std'),
 
@@ -242,6 +245,9 @@ dkhit_group.rename(columns={
 
     'impact_momentum_avg': 'Avg Impact',
     'impact_momentum_std': 'Std Impact',
+
+    'trigger_to_impact_avg': 'Avg Trigger',
+    'trigger_to_impact_std': 'Std Trigger',
 
     'hand_cast_avg': 'Avg Hand Cast',
     'hand_cast_std': 'Std Hand Cast',
@@ -359,7 +365,7 @@ st.subheader("Diamond Kinetics Leaderboard",divider = "yellow")
 if len(dkhit_group) == 0:
     st.write("No Data Available for Selected Dates and Classes")
 else:
-    st.dataframe(dkhit_group[['Player', 'Class', 'Avg Attack Angle', 'Std Attack Angle', 'Avg Barrel Speed', 'Std Barrel Speed', 'Avg Hand Speed', 'Std Hand Speed', 'Avg Impact','Std Impact']],
+    st.dataframe(dkhit_group[['Player', 'Class', 'Avg Attack Angle', 'Std Attack Angle', 'Avg Barrel Speed', 'Std Barrel Speed', 'Avg Hand Speed', 'Std Hand Speed', 'Avg Trigger', 'Std Trigger', 'Avg Impact','Std Impact']],
                     hide_index=True,
                     column_config={
                         "Avg Attack Angle": st.column_config.NumberColumn("Avg Attack Angle", format="%.2f"),
@@ -368,10 +374,88 @@ else:
                         "Std Barrel Speed": st.column_config.NumberColumn("Std Barrel Speed", format="%.2f"),
                         "Avg Hand Speed": st.column_config.NumberColumn("Avg Hand Speed", format="%.2f"),
                         "Std Hand Speed": st.column_config.NumberColumn("Std Hand Speed", format="%.2f"),
+                        "Avg Trigger": st.column_config.NumberColumn("Avg Trigger", format="%.2f"),
+                        "Std Trigger": st.column_config.NumberColumn("Std Trigger", format="%.2f"),
                         "Avg Impact": st.column_config.NumberColumn("Avg Impact", format="%.2f"),
                         "Std Impact": st.column_config.NumberColumn("Std Impact", format="%.2f"),
                     },
     )
+
+#%% Display scatter of barrel speed vs trigger
+
+st.subheader("Barrel Speed vs. Trigger to Impact", divider="yellow")
+show_names = st.toggle("Show Player Names?",value=True)
+
+batspeed_fig, ax = plt.subplots(figsize=(10, 5))
+batspeed_fig.patch.set_facecolor("#000000")
+ax.set_facecolor("#000000")
+
+# Scatter plot
+ax.scatter(
+    dkhit_group['Avg Trigger'],
+    dkhit_group['Avg Barrel Speed'],
+    color="#f1d71c",
+    edgecolor="white",
+    s=90,
+    alpha=0.9,
+    zorder=5
+)
+
+# Optional labels
+for _, row in dkhit_group.iterrows():
+    if show_names:
+        ax.text(
+            row['Avg Trigger'],
+            row['Avg Barrel Speed'],
+            row['Player'],
+            fontsize=10,
+            color="white",
+            ha="left",
+            va="bottom",
+            alpha=0.9
+        )
+
+# Lock Axes
+ax.set_ylim(45, 70)
+ax.set_xlim(150, 240)
+
+# Define middle points for quadrants
+x_mid = dkhit_group['Avg Trigger'].median()  # or a fixed value
+y_mid = dkhit_group['Avg Barrel Speed'].median()
+
+# Draw vertical and horizontal lines
+ax.axvline(x_mid, color="white", linestyle="--", linewidth=1.2)
+ax.axhline(y_mid, color="white", linestyle="--", linewidth=1.2)
+
+# Color quadrants (light alpha so points still visible)
+ax.fill_betweenx([y_mid, 75], ax.get_xlim()[0], x_mid, color="#1b7e00", alpha=0.3)  # Top left
+ax.fill_betweenx([y_mid, 75], x_mid, ax.get_xlim()[1], color="#f1d71c", alpha=0.3)  # Top right
+ax.fill_betweenx([45, y_mid], x_mid, ax.get_xlim()[1], color="#ff0000", alpha=0.3)  # Bottom right
+ax.fill_betweenx([45, y_mid], ax.get_xlim()[0], x_mid, color="#f1d71c", alpha=0.3)  # Bottom left
+
+# Offsets to keep text inside the plot
+offset_x = 2   # units of X-axis (ms)
+offset_y = 1   # units of Y-axis (mph)
+
+ax.text(150 + offset_x, 70 - offset_y, "Short and Powerful", color="white", fontsize=8, weight="bold", ha="left", va="top") # Top-left
+ax.text(240 - offset_x, 70 - offset_y, "Powerful, but Lacking Quickness", color="white", fontsize=8, weight="bold", ha="right", va="top") # Top-right
+ax.text(240 - offset_x, 45 + offset_y, "Long and Slow", color="white", fontsize=8, weight="bold", ha="right", va="bottom") # Bottom-right
+ax.text(150 + offset_x, 45 + offset_y, "Quick to the Ball, but Lacking Impact", color="white", fontsize=8, weight="bold", ha="left", va="bottom") # Bottom-left
+
+# Labels
+ax.set_xlabel("Avg Trigger (ms)", color="white", fontsize=14, labelpad=10)
+ax.set_ylabel("Avg Barrel Speed (mph)", color="white", fontsize=14, labelpad=10)
+
+# Grid & ticks
+ax.grid(True, color="lightgray", linestyle="--", linewidth=0.5, alpha=0.5)
+ax.tick_params(colors="white", labelsize=12)
+
+# Spines
+for spine in ax.spines.values():
+    spine.set_color("white")
+
+# Render
+st.pyplot(batspeed_fig, use_container_width=True)
 
 # # Rapsodo Hitting
 
@@ -387,17 +471,19 @@ else:
 # Rapsodo Pitching
 st.subheader("Release Points by Pitcher", divider="yellow")
 
-chart, table = st.columns(2,gap='large')
+# Rapsodo Pitching
+st.subheader("Release Points by Pitcher", divider="yellow")
+if len(player_release_stats) == 0:
+    st.write("No Data Available for Selected Dates and Classes")
+else:
+    chart, table = st.columns(2,gap='large')
 
-with chart:
+    with chart:
 
-    if len(player_release_stats) == 0:
-        st.write("No Data Available for Selected Dates and Classes")
-    else:
         # Create figure
         fig_release, ax_release = plt.subplots(figsize=(8, 3))
-        fig_release.patch.set_facecolor("#000e29")
-        ax_release.set_facecolor("#000e29")
+        fig_release.patch.set_facecolor("#000000")
+        ax_release.set_facecolor("#000000")
 
         # Scatter plot: X = Release Side, Y = Release Height
         ax_release.scatter(
@@ -441,22 +527,22 @@ with chart:
         # Display in Streamlit
         st.pyplot(fig_release)
 
-with table:
-    player_release_stats.rename(columns = {
-        "full_name": "Player",
-        "Release Side_mean": "Release Side",
-        "Release Height_mean": "Release Height"
-    }, inplace=True)
-    st.dataframe(player_release_stats,
-                hide_index = True,
-                column_order=("Player",
-                            "Release Side",
-                            "Release Height"),
-                column_config={
-                "Release Side": st.column_config.NumberColumn("Release Side", format="%.1f"),
-                "Release Height": st.column_config.NumberColumn("Release Height", format="%.1f"),
-                }
-                )
+    with table:
+        player_release_stats.rename(columns = {
+            "full_name": "Player",
+            "Release Side_mean": "Release Side",
+            "Release Height_mean": "Release Height"
+        }, inplace=True)
+        st.dataframe(player_release_stats,
+                    hide_index = True,
+                    column_order=("Player",
+                                "Release Side",
+                                "Release Height"),
+                    column_config={
+                    "Release Side": st.column_config.NumberColumn("Release Side", format="%.1f"),
+                    "Release Height": st.column_config.NumberColumn("Release Height", format="%.1f"),
+                    }
+                    )
 
 #%% show definitions doc
 
